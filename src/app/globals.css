@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+.section-padding {
+  @apply py-16 md:py-24 xl:py-32;
+}
+
+.section-margin {
+  @apply mt-16 md:mt-24 xl:mt-32;
+}
+
+.luxury-grid-gap {
+  @apply gap-10 lg:gap-16;
+}
+
+:root {
+  --background: #fff8ef;
+  --foreground: #1e1b13;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter);
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* LAYOUT UTILITIES */
+
+.container-primary {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+@media (min-width: 1024px) {
+  .container-primary {
+    padding-inline: 80px;
+  }
+}
+
+.section-padding {
+  padding-block: 120px;
+}
+
+/* TYPOGRAPHY */
+
+.section-label {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e9c349;
+  margin-bottom: 16px;
+}
+
+.display-lg {
+  font-family: var(--font-playfair);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+@media (max-width: 768px) {
+  .display-lg {
+    font-size: 32px;
+  }
+}
+
+.headline-md {
+  font-family: var(--font-playfair);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.headline-sm {
+  font-family: var(--font-playfair);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.body-lg {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.body-md {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.label-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.quote-text {
+  font-family: var(--font-playfair);
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+/* EFFECTS */
+
+.gold-border {
+  border: 1px solid rgba(233, 195, 73, 0.2);
+}
+
+.ambient-shadow {
+  box-shadow: 0 8px 32px rgba(0, 6, 19, 0.06);
+}
+
+@keyframes sbsMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulseOrb {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: scale(1.45);
+    opacity: 0.12;
+  }
+
+  100% {
+    transform: scale(0.9);
+    opacity: 0.4;
+  }
+}
