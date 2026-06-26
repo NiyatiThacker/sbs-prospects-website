@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { label: "About Us", href: "/about" },
   { label: "Services", href: "/services" },
   //* { label: "Products", href: "/products" }, *//
-  { label: "Calculator", href: "/calculator" },
+  //*{ label: "Calculator", href: "/calculator" },*//
   { label: "Contact", href: "/contact" },
 ];
 
@@ -21,7 +21,7 @@ const NavbarSection: React.FC = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#fbf3e4] border-b border-[#e8e8e8]">
       
       {/* CONTAINER FIX (IMPORTANT) */}
-      <div className="max-w-[1200px] mx-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 font-[Montserrat]">
+      <div className="max-w-300 mx-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 font-[Montserrat]">
 
         {/* LOGO */}
         <Link href="/" className="flex items-center">
@@ -29,8 +29,9 @@ const NavbarSection: React.FC = () => {
             src="/logo/Sbs-1.png"
             alt="SBS Financial Services"
             width={140}
-            height={45}
+            height={50}
             className="object-contain"
+            style={{ width: "auto", height: "auto" }}
             priority
           />
         </Link>
@@ -47,7 +48,7 @@ const NavbarSection: React.FC = () => {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className={`text-[12px] font-semibold tracking-[0.08em] uppercase pb-[2px] border-b-2 transition-all duration-200
+                    className={`text-[12px] font-semibold tracking-[0.08em] uppercase pb-0.5 border-b-2 transition-all duration-200
                     ${
                       isActive
                         ? "text-[#111] border-[#C9A84C]"
@@ -65,11 +66,11 @@ const NavbarSection: React.FC = () => {
         {/* MOBILE MENU BUTTON (FIXED SPACING) */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="lg:hidden flex flex-col gap-[5px] p-2 -mr-2"
+          className="lg:hidden flex flex-col gap-1.25 p-2 -mr-2"
         >
-        <span className="w-6 h-[2px] bg-black"></span>
-        <span className="w-6 h-[2px] bg-black"></span>
-        <span className="w-6 h-[2px] bg-black"></span>
+        <span className="w-6 h-0.5 bg-black"></span>
+        <span className="w-6 h-0.5 bg-black"></span>
+        <span className="w-6 h-0.5 bg-black"></span>
       </button>
       </div>
 

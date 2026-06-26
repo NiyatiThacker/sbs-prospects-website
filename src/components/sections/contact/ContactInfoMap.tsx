@@ -18,7 +18,7 @@ export default function ContactInfoMap() {
         </div>
 
         {/* Map Container */}
-        <div className="relative rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white h-[350px] md:h-[500px] w-full">
+        <div className="relative rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white h-87.5 md:h-125 w-full">
           <iframe
             src={mapSrc}
             width="100%"

@@ -12,10 +12,10 @@ const playfair = Playfair_Display({
 
 // Replace these with your real profile links.
 const socialLinks = [
-  { name: "LinkedIn", href: "https://linkedin.com/", icon: LinkedinIcon },
-  { name: "Instagram", href: "https://instagram.com/", icon: InstagramIcon },
-  { name: "X", href: "https://x.com/", icon: XIcon },
-  { name: "Facebook", href: "https://facebook.com/", icon: FacebookIcon },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/sbs-financials/", icon: LinkedinIcon },
+  { name: "Instagram", href: "https://www.instagram.com/sbsfinancial", icon: InstagramIcon },
+  { name: "X", href: "https://x.com/services5272", icon: XIcon },
+  { name: "Facebook", href: "https://www.facebook.com/share/1ETodRg3J2/", icon: FacebookIcon },
 ];
 
 type FormState = {
@@ -95,7 +95,7 @@ export default function ContactForm() {
   }
 
   return (
-    <section style={sectionStyle} className="w-full bg-white md:!px-16 md:!py-24">
+    <section style={sectionStyle} className="w-full bg-white md:px-16! md:py-24!">
       <div
         className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_1.3fr] lg:gap-16"
         style={{ alignItems: "stretch" }}
@@ -103,7 +103,7 @@ export default function ContactForm() {
         {/* Left: image + glass info card */}
         <div style={{ ...cardWrapStyle, minHeight: 560 }}>
           <img
-            src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop"
+            src="/images/contact us/contact-form.jpg"
             alt="Office workspace"
             style={{
               position: "absolute",
@@ -175,7 +175,7 @@ export default function ContactForm() {
                       justifyContent: "center",
                       transition: "all 0.3s",
                     }}
-                    className="hover:!bg-[#E9C46A] hover:!text-[#0F1B33]"
+                    className="hover:bg-[#E9C46A]! hover:text-[#0F1B33]!"
                   >
                     <Icon style={{ width: "1rem", height: "1rem" }} />
                   </a>
@@ -298,7 +298,7 @@ export default function ContactForm() {
                   opacity: status === "sending" ? 0.7 : 1,
                   transition: "all 0.3s",
                 }}
-                className="hover:!bg-[#16213b] hover:!shadow-lg"
+                className="hover:bg-[#16213b]! hover:shadow-lg!"
               >
                 {status === "sending" ? "SENDING..." : "SEND MESSAGE"}
                 <Send style={{ width: "1rem", height: "1rem" }} />

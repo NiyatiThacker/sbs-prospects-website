@@ -65,13 +65,13 @@ export default function ContactHero() {
         >
           <div className="float-img group relative w-40 overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 transition-all duration-500 hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:ring-[#A9802F]/30 sm:w-48 md:w-56 lg:w-64" style={{ aspectRatio: "5 / 4" }}>
             <img
-              src="https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?q=80&w=800&auto=format&fit=crop"
+              src="/images/contact us/contact 1.1.jpg"
               alt="Starry night sky"
               loading="eager"
               decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
           </div>
         </div>
 
@@ -120,13 +120,13 @@ export default function ContactHero() {
         >
           <div className="float-img-delayed group relative w-40 overflow-hidden rounded-2xl shadow-md ring-1 ring-black/5 transition-all duration-500 hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:ring-[#A9802F]/30 sm:w-48 md:w-56 lg:w-64" style={{ aspectRatio: "5 / 4" }}>
             <img
-              src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=800&auto=format&fit=crop"
+              src="images/contact us/contact-hero1.jpg"
               alt="String lights over a cobblestone alley"
               loading="eager"
               decoding="async"
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
           </div>
         </div>
       </div>

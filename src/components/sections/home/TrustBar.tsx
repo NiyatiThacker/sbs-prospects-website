@@ -221,7 +221,7 @@ export default function TrustBar() {
           }}>
             <Image src="/logo/Sbs-1.png" alt="SBS Trust"
               width={84} height={84}
-              style={{ objectFit: "contain", borderRadius: "50%" }} />
+              style={{ width: "auto", height: "auto", objectFit: "contain", borderRadius: "50%" }} />
           </div>
         </div>
 

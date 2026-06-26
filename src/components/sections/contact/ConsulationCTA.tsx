@@ -56,7 +56,7 @@ export default function ContactCTA() {
         <a
          
   href="#booking"
-  className="inline-flex items-center justify-center gap-3 w-80 bg-gradient-to-r from-[#e5c575] via-[#b8974a] to-[#a28238] text-white  text-xs font-semibold tracking-wider uppercase py-4 rounded-full shadow-lg hover:from-[#d1b058] hover:via-[#a08238] hover:to-[#8a6c2a] active:scale-98 transition-all duration-300"
+  className="inline-flex items-center justify-center gap-3 w-80 bg-linear-to-r from-[#e5c575] via-[#b8974a] to-[#a28238] text-white  text-xs font-semibold tracking-wider uppercase py-4 rounded-full shadow-lg hover:from-[#d1b058] hover:via-[#a08238] hover:to-[#8a6c2a] active:scale-98 transition-all duration-300"
 >
   <span>Book a Free Consultation</span>
   <svg 
