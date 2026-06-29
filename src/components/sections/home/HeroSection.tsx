@@ -146,7 +146,7 @@ const HeroSection: React.FC = () => {
       {/* Content */}
       <Container className="relative z-10 pt-28 sm:pt-32">
 
-  <div className="max-w-[780px] max-sm:max-w-[310px]">
+  <div className="max-w-48.75px max-sm:max-w-77.5px">
 
         {/* Headline */}
         <h1 style={styles.headline}
@@ -160,7 +160,7 @@ const HeroSection: React.FC = () => {
             "
           >
           Together We Create 
-          <span style={styles.headlineItalic}>SBS Financial</span>
+          <span style={styles.headlineItalic}>SBS Prospects</span>
         </h1>
 
         {/* Tagline */}
@@ -178,8 +178,8 @@ const HeroSection: React.FC = () => {
             md:text-base
             "
           >
-            Precision-engineered wealth management for the modern global
-            investor, where heritage meets innovation.
+            SBS Prospects provides professional industry training programs, 
+            HR consultancy services, and career-focused courses for students and professionals.
           </p>
         </div>
 
@@ -204,7 +204,7 @@ const HeroSection: React.FC = () => {
             onMouseEnter={() => setPrimaryHover(true)}
             onMouseLeave={() => setPrimaryHover(false)}
           >
-            Get Started
+            Explore Traning Programs 
           </a>
           <a
             href="#"
@@ -220,7 +220,7 @@ const HeroSection: React.FC = () => {
             onMouseEnter={() => setSecondaryHover(true)}
             onMouseLeave={() => setSecondaryHover(false)}
           >
-            Our Philosophy
+            Book Career Consultation 
           </a>
         </div>
       </div>

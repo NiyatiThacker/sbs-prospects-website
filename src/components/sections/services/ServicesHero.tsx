@@ -51,7 +51,7 @@ export default function ServicesHero() {
           maxWidth: "960px",
         }}
       >
-        Financial Services
+        Career Support
       </h1>
 
       {/* Sub-tagline */}

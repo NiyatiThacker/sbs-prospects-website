@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 export default function Footer() {
@@ -330,11 +329,11 @@ export default function Footer() {
           <div className="sbs-footer-marquee">
             {[...Array(2)].map((_, i) => (
               <span key={i} style={{ display: "flex", alignItems: "center" }}>
-                <span style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "13px", fontWeight: 600, color: "#000613", letterSpacing: "0.38em", textTransform: "uppercase", paddingRight: "40px", userSelect: "none" }}>SBS Financial Services</span>
+                <span style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "13px", fontWeight: 600, color: "#000613", letterSpacing: "0.38em", textTransform: "uppercase", paddingRight: "40px", userSelect: "none" }}>SBS PROSPECTS</span>
                 <span style={{ fontSize: "13px", color: "#e9c349", paddingRight: "40px", opacity: 0.9 }}>✦</span>
-                <span style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "13px", fontWeight: 600, color: "#000613", letterSpacing: "0.38em", textTransform: "uppercase", paddingRight: "40px", userSelect: "none" }}>Wealth · Clarity · Discipline</span>
+                <span style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "13px", fontWeight: 600, color: "#000613", letterSpacing: "0.38em", textTransform: "uppercase", paddingRight: "40px", userSelect: "none" }}>HR Consultancy · Internship Programs · RECRUITMENT SUPPORT</span>
                 <span style={{ fontSize: "13px", color: "#e9c349", paddingRight: "40px", opacity: 0.9 }}>✦</span>
-                <span style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "13px", fontWeight: 600, color: "#000613", letterSpacing: "0.38em", textTransform: "uppercase", paddingRight: "40px", userSelect: "none" }}>Trusted Since 2012</span>
+                <span style={{ fontFamily: "var(--font-playfair), Georgia, serif", fontSize: "13px", fontWeight: 600, color: "#000613", letterSpacing: "0.38em", textTransform: "uppercase", paddingRight: "40px", userSelect: "none" }}>Trusted Since 2019</span>
                 <span style={{ fontSize: "13px", color: "#e9c349", paddingRight: "40px", opacity: 0.9 }}>✦</span>
               </span>
             ))}
@@ -350,8 +349,8 @@ export default function Footer() {
             <div className="sbs-footer-logo-wrap">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/logo/Sbs-1.png"
-                alt="SBS Financial Services"
+                src="/logo/Sbs-2.png"
+                alt="SBS Prospects"
                 width={220}
                 height={72}
                 style={{
@@ -364,15 +363,15 @@ export default function Footer() {
             </div>
 
             <span style={{ fontSize: "9px", letterSpacing: "0.28em", textTransform: "uppercase", color: "#735c00", display: "block", marginBottom: "16px", fontWeight: 500 }}>
-              Financial Services
+              SBS Prospects
             </span>
             <p style={{ fontSize: "12px", lineHeight: 1.78, color: "#43474e", fontWeight: 300, maxWidth: "260px", marginBottom: "22px" }}>
-              SBS Financial Services delivers personalized financial advisory and wealth management solutions focused on long-term financial confidence and stability.
+              We build scalable software systems designed for performance, reliability, and long-term growth.
             </p>
 
             {/* Social Icons */}
             <div className="sbs-social-row">
-              <a href="https://www.instagram.com/sbsfinancial?igsh=MW01ZG9pM29obW0xbg==" target="_blank" rel="noopener noreferrer" className="sbs-social-btn" title="Instagram">
+              <a href="https://www.instagram.com/sbs.prospects/" target="_blank" rel="noopener noreferrer" className="sbs-social-btn" title="Instagram">
                 <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#735c00" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="#735c00" strokeWidth="1.8"/><circle cx="17.5" cy="6.5" r="1.2" fill="#735c00"/></svg>
               </a>
               <a href="https://www.facebook.com/share/1ETodRg3J2/" target="_blank" rel="noopener noreferrer" className="sbs-social-btn" title="Facebook">
@@ -381,7 +380,7 @@ export default function Footer() {
               <a href="https://x.com/services5272" target="_blank" rel="noopener noreferrer" className="sbs-social-btn" title="Twitter / X">
                 <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.912-5.622z"/></svg>
               </a>
-              <a href="https://www.linkedin.com/company/sbs-financials/" target="_blank" rel="noopener noreferrer" className="sbs-social-btn" title="LinkedIn">
+              <a href="https://www.linkedin.com/company/sbs-prospectss" target="_blank" rel="noopener noreferrer" className="sbs-social-btn" title="LinkedIn">
                 <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
               </a>
               <a href="https://youtube.com/@sbsfinancials?si=dKQ9457BVXpHwCHK" target="_blank" rel="noopener noreferrer" className="sbs-social-btn" title="YouTube">
@@ -396,7 +395,7 @@ export default function Footer() {
               Quick Links
               <span style={{ position: "absolute", bottom: 0, left: 0, width: "22px", height: "1px", background: "#e9c349", display: "block" }} />
             </span>
-            {["Home", "About", "Services", "Calculators", "Blog", "Contact"].map((item) => (
+            {["Home", "About Us", "Services","Training & Courses", "HR Consultancy", "Contact"].map((item) => (
               <Link key={item} href={`/${item.toLowerCase()}`} className="sbs-footer-link">{item}</Link>
             ))}
           </div>
@@ -407,7 +406,7 @@ export default function Footer() {
               Services
               <span style={{ position: "absolute", bottom: 0, left: 0, width: "22px", height: "1px", background: "#e9c349", display: "block" }} />
             </span>
-            {["Mutual Funds", "SIP Planning", "Insurance", "Tax Planning", "Fixed Deposits", "Retirement Planning", "Wealth Management"].map((item) => (
+            {["Career Programs", "Placement Assistance", "Internship Support", "Industry Based Training", "Live Projects", "Expert Trainers", "HR & Consultancy"].map((item) => (
               <Link key={item} href="/services" className="sbs-footer-link">{item}</Link>
             ))}
           </div>
@@ -433,8 +432,7 @@ export default function Footer() {
               </div>
               <span style={{ fontSize: "12px", color: "#43474e", lineHeight: 1.65, fontWeight: 300 }}>
                 1003,Span Trade Center,<br />
-                Pritam Nagar,<br />
-                Paldi,<br />
+                Pritam Nagar, Paldi,<br />
                 Ahmedabad, Gujarat 380006
               </span>
             </a>
@@ -472,7 +470,7 @@ export default function Footer() {
               <div className="sbs-contact-icon">
                 <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </div>
-              <span style={{ fontSize: "12px", color: "#735c00", lineHeight: 1.65, fontWeight: 300 }}>Sbsfin27@gmail.com</span>
+              <span style={{ fontSize: "12px", color: "#735c00", lineHeight: 1.65, fontWeight: 300 }}>prospectssbs@gmail.com</span>
             </div>
 
             {/* Blended Timings Row */}
@@ -493,7 +491,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="sbs-footer-bottom">
           <span style={{ fontSize: "11px", color: "rgba(67,71,78,0.5)" }}>
-            © 2026 SBS Financial Services. All rights reserved.
+            © 2026 SBS Prospects. All rights reserved.
           </span>
           <div className="sbs-footer-bottom-links" style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <Link href="/privacy-policy" className="sbs-footer-legal-link">Privacy Policy</Link>
