@@ -5,39 +5,39 @@ import { useState } from "react";
 const faqs = [
   {
     id: 1,
-    question: "Is your HR service only for trained students?",
+    question: "What financial services does SBS Financial Services provide?",
     answer:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
+      "We offer a comprehensive range of services including Mutual Funds, SIP Planning, Insurance, Tax Planning, Fixed Deposits, Retirement Planning, and Wealth Management — all tailored to your personal financial goals.",
   },
   {
     id: 2,
-    question: "What industries do you support?",
+    question: "How do I begin financial planning with SBS?",
     answer:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
+      "Simply book a private consultation with our advisors. We start with a detailed understanding of your current finances, goals, and risk appetite before crafting a personalized strategy.",
   },
   {
     id: 3,
-    question: "Do you conduct interview preparation?",
+    question: "Does SBS provide personalized investment guidance?",
     answer:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
+      "Yes. Every client receives a fully personalized investment plan. We do not believe in one-size-fits-all solutions — your portfolio is built around your unique life stage and financial objectives.",
   },
   {
     id: 4,
-    question: "What is HR Consultancy?",
+    question: "Can I schedule a consultation for retirement or tax planning?",
     answer:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
+      "Absolutely. Our advisors specialize in long-term retirement structuring and tax-efficient investment planning. Contact us to schedule a dedicated session at your convenience.",
   },
   {
     id: 5,
-    question: "Do you provide job placement support?",
+    question: "Is my financial information kept confidential?",
     answer:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
+      "Complete confidentiality is a cornerstone of our practice. All client data is handled with the highest level of privacy and is never shared with third parties.",
   },
   {
     id: 6,
-    question: "How do you help companies with hiring?",
+    question: "What makes SBS different from other financial advisors?",
     answer:
-      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
+      "We combine disciplined strategy with genuine personal relationships. Our clients trust us for transparency, consistency, and long-term financial clarity that goes beyond just numbers.",
   },
 ];
 
