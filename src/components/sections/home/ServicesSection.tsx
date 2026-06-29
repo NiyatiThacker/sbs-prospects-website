@@ -5,9 +5,9 @@ import Link from "next/link";
 
 const SERVICES = [
   {
-    id: "Mutual Funds & SIP Advisory",
-    label: "EQUITY & DEBT",
-    title: "Mutual Funds & SIP Advisory",
+    id: "Industry Training Programs",
+    label: "INDUSTRY TRAINING PROGRAMS",
+    title: "Industry Training Programs",
     headline: "Curated funds, Long-term wealth creation.",
     body: "Transform your financial aspirations into reality with personalized mutual fund and SIP solutions designed for consistent growth, disciplined investing, and long-term wealth creation.",
     points: [
@@ -20,9 +20,9 @@ const SERVICES = [
     stat2: { val: "₹500Cr+", label: "Assets Managed" },
   },
   {
-    id: "Tax Planning & Advisory",
-    label: "SYSTEMATIC WEALTH",
-    title: "Tax Planning & Advisory",
+    id: "MBA Skill Development Courses",
+    label: "MBA SKILL DEVELOPMENT COURSES",
+    title: "MBA Skill Development Courses",
     headline: "Discipline compounds silently, Brilliantly.",
     body: "Make smarter tax decisions with personalized planning, compliance-focused solutions, and expert guidance designed to optimize your savings and support your financial goals.",
     points: [
@@ -35,9 +35,9 @@ const SERVICES = [
     stat2: { val: "₹80L", label: "Avg. SIP Corpus at Maturity" },
   },
   {
-    id: "Insurance Solutions",
-    label: "RISK ARCHITECTURE",
-    title: "Insurance Solutions",
+    id: "HR Consultancy",
+    label: "HR CONSULTANCY",
+    title: "HR Consultancy",
     headline: "Protection designed around your exposure.",
     body: "Most clients are either under-insured or wrongly insured. We begin with a coverage audit — identifying gaps before recommending anything. Then we build a bespoke protection structure for your family and lifestyle.",
     points: [
@@ -51,9 +51,9 @@ const SERVICES = [
     stat2: { val: "50+", label: "Insurers Accessed" },
   },
   {
-    id: "Financial Planning",
-    label: "INTELLIGENT COMPLIANCE",
-    title: "Financial Planning",
+    id: "Career Guidance",
+    label: "CAREER GUIDANCE",
+    title: "Career Guidance",
     headline: "Tax planning begins at income, not at filing.",
     body: "The best tax outcome comes from structuring made months before the financial year ends — not in March. We work year-round across ELSS, NPS, PPF, and capital gains harvesting to minimise your liability.",
     points: [
@@ -67,9 +67,9 @@ const SERVICES = [
     stat2: { val: "100%", label: "Compliance Rate" },
   },
   {
-    id: "NRI Investment Services",
-    label: "CAPITAL PRESERVATION",
-    title: "NRI Investment Services",
+    id: "Recruitment Support",
+    label: "RECRUITMENT SUPPORT",
+    title: "Recruitment Support",
     headline: "Stable returns. Secure capital. Zero noise.",
     body: "For capital that needs certainty, we provide access to stable fixed-income solutions across trusted banks and institutions. Structured for secure capital preservation with optimal interest rate positioning.",
     points: [
@@ -83,9 +83,9 @@ const SERVICES = [
     stat2: { val: "100%", label: "Capital Safety Record" },
   },
   {
-    id: "Portfolio Review & Rebalancing",
-    label: "LIFELONG CERTAINTY",
-    title: "Portfolio Review & Rebalancing",
+    id: "Internship Programs",
+    label: "INTERNSHIP PROGRAMS",
+    title: "Internship Programs",
     headline: "Build the corpus. Then design the income.",
     body: "Retirement planning has two distinct phases: accumulation and distribution. We engineer both — building inflation-adjusted corpora during working years and designing SWP-based income structures that last a lifetime.",
     points: [
@@ -242,7 +242,7 @@ export default function ServicesSection() {
             fontSize: "0.56rem", letterSpacing: "0.35em", fontWeight: 700,
             color: "#b8901a", textTransform: "uppercase" as const,
           }}>
-            SBS Financial Services
+            SBS Prospects
           </span>
         </div>
         <h2 style={{

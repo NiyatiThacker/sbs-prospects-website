@@ -12,8 +12,8 @@ const playfair = Playfair_Display({
 
 // Replace these with your real profile links.
 const socialLinks = [
-  { name: "LinkedIn", href: "https://www.linkedin.com/company/sbs-financials/", icon: LinkedinIcon },
-  { name: "Instagram", href: "https://www.instagram.com/sbsfinancial", icon: InstagramIcon },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/sbs-prospectss", icon: LinkedinIcon },
+  { name: "Instagram", href: "https://www.instagram.com/sbs.prospects/", icon: InstagramIcon },
   { name: "X", href: "https://x.com/services5272", icon: XIcon },
   { name: "Facebook", href: "https://www.facebook.com/share/1ETodRg3J2/", icon: FacebookIcon },
 ];
@@ -84,15 +84,26 @@ export default function ContactForm() {
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus("sending");
+  e.preventDefault();
+  setStatus("sending");
 
-    // TODO: replace with your real submit logic (API route, Formspree, etc.)
-    await new Promise((resolve) => setTimeout(resolve, 900));
+  try {
+    await fetch("YOUR_SCRIPT_URL", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
 
     setStatus("sent");
     setForm(initialForm);
+  } catch (error) {
+    console.error(error);
+    setStatus("idle");
+    alert("Error sending message");
   }
+}
 
   return (
     <section style={sectionStyle} className="w-full bg-white md:px-16! md:py-24!">
@@ -148,9 +159,9 @@ export default function ContactForm() {
                 Contact Info
               </h3>
               <p style={{ marginTop: "0.75rem", color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
-                advisors@sbsfinancials.in
+                prospectssbs@gmail.com
                 <br />
-                +91 98765 43210
+                +91 9081353523
               </p>
 
               <h3 style={{ color: "#E9C46A", fontSize: "1.25rem", fontWeight: 600, marginTop: "2rem" }}>
@@ -191,7 +202,7 @@ export default function ContactForm() {
             className={playfair.className}
             style={{ fontSize: "2.5rem", fontStyle: "italic", color: "#16162B" }}
           >
-            Send a message.
+            SEND A MESSAGE
           </h2>
           <p style={{ marginTop: "1rem", maxWidth: "36rem", color: "#4B5563" }}>
             Use the button above to book your free consultation. For other

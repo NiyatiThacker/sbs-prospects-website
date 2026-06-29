@@ -5,7 +5,7 @@ import Link from "next/link";
 const services = [
   {
     number: "1",
-    title: "Mutual Funds & SIP Advisory",
+    title: "INDUSTRY TRAINING PROGRAMS",
     description:
       "Start your wealth-building journey with the right funds tailored to your goals and risk appetite.",
     features: [
@@ -16,7 +16,7 @@ const services = [
   },
   {
     number: "2",
-    title: "Tax Planning & Advisory",
+    title: "MBA SKILL DEVELOPMENT COURSES",
     description:
       "Minimise your tax burden legally while staying fully compliant with the latest regulations.",
     features: [
@@ -27,7 +27,7 @@ const services = [
   },
   {
     number: "3",
-    title: "Insurance Solutions",
+    title: "HR CONSULTANCY",
     description:
       "Protect what matters most with the right life, health, and general insurance coverage.",
     features: [
@@ -38,7 +38,7 @@ const services = [
   },
   {
     number: "4",
-    title: "Financial Planning",
+    title: "CAREER GUIDANCE",
     description:
       "A comprehensive roadmap that connects every aspect of your finances toward a secure future.",
     features: [
@@ -49,7 +49,7 @@ const services = [
   },
   {
     number: "5",
-    title: "NRI Investment Services",
+    title: "RECRUITMENT SUPPORT",
     description:
       "Invest in India confidently from abroad with fully compliant and hassle-free solutions.",
     features: [
@@ -60,7 +60,7 @@ const services = [
   },
   {
     number: "6",
-    title: "Portfolio Review & Rebalancing",
+    title: "INTERNSHIP PROGRAMS",
     description:
       "Keep your investments aligned to your goals with periodic, data-driven portfolio reviews.",
     features: [

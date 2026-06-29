@@ -8,8 +8,8 @@ const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
   { label: "Services", href: "/services" },
-  //* { label: "Products", href: "/products" }, *//
-  //*{ label: "Calculator", href: "/calculator" },*//
+  { label: "Training & Courses", href: "/training-courses" },
+  { label: "HR Consultancy", href: "/hr-consultancy" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -27,7 +27,7 @@ const NavbarSection: React.FC = () => {
         <Link href="/" className="flex items-center">
           <Image
             src="/logo/Sbs-1.png"
-            alt="SBS Financial Services"
+            alt="SBS Prospects"
             width={140}
             height={50}
             className="object-contain"
