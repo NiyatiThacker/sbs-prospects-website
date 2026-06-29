@@ -5,39 +5,39 @@ import { useState } from "react";
 const faqs = [
   {
     id: 1,
-    question: "What financial services does SBS Financial Services provide?",
+    question: "Is your HR service only for trained students?",
     answer:
-      "We offer a comprehensive range of services including Mutual Funds, SIP Planning, Insurance, Tax Planning, Fixed Deposits, Retirement Planning, and Wealth Management — all tailored to your personal financial goals.",
+      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
   },
   {
     id: 2,
-    question: "How do I begin financial planning with SBS?",
+    question: "What industries do you support?",
     answer:
-      "Simply book a private consultation with our advisors. We start with a detailed understanding of your current finances, goals, and risk appetite before crafting a personalized strategy.",
+      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
   },
   {
     id: 3,
-    question: "Does SBS provide personalized investment guidance?",
+    question: "Do you conduct interview preparation?",
     answer:
-      "Yes. Every client receives a fully personalized investment plan. We do not believe in one-size-fits-all solutions — your portfolio is built around your unique life stage and financial objectives.",
+      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
   },
   {
     id: 4,
-    question: "Can I schedule a consultation for retirement or tax planning?",
+    question: "What is HR Consultancy?",
     answer:
-      "Absolutely. Our advisors specialize in long-term retirement structuring and tax-efficient investment planning. Contact us to schedule a dedicated session at your convenience.",
+      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
   },
   {
     id: 5,
-    question: "Is my financial information kept confidential?",
+    question: "Do you provide job placement support?",
     answer:
-      "Complete confidentiality is a cornerstone of our practice. All client data is handled with the highest level of privacy and is never shared with third parties.",
+      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
   },
   {
     id: 6,
-    question: "What makes SBS different from other financial advisors?",
+    question: "How do you help companies with hiring?",
     answer:
-      "We combine disciplined strategy with genuine personal relationships. Our clients trust us for transparency, consistency, and long-term financial clarity that goes beyond just numbers.",
+      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English.",
   },
 ];
 
