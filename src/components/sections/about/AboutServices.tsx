@@ -9,15 +9,14 @@ const stats = [
 ];
 
 const marqueeItems = [
-  "Wealth Management",
-  "Financial Independence",
-  "Conflict-Free Advisory",
+  "INDUSTRY TRAINING PROGRAMS",
+  "MBA SKILL DEVELOPMENT COURSES",
+  "HR CONSULTANCY",
   "Ahmedabad",
   "6 Years",
-  "Tax Planning",
-  "Mutual Fund & SIP",
-  "NRI Investments",
-  "Retirement Planning",
+  "CAREER GUIDANCE",
+  "RECRUITMENT SUPPORT",
+  "INTERNSHIP PROGRAMS",
 ];
 
 export default function AboutSection() {
@@ -244,7 +243,7 @@ export default function AboutSection() {
         >
           <span style={{ display: "block", width: 20, height: 1, background: "#7A6A1E", flexShrink: 0 }} />
           <span style={{ fontSize: 14, letterSpacing: "0.22em", textTransform: "uppercase", fontWeight: 500, color: "#b8901a" }}>
-            About SBS Financials
+            About SBS Prospects
           </span>
         </div>
         <div

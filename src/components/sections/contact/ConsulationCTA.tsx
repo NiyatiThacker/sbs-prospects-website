@@ -50,7 +50,7 @@ export default function ContactCTA() {
           Book a Free Consultation
         </h2>
         <p className="text-gray-500 text-base mb-8" style={{ marginBottom: "32px" ,marginTop: "10px"}}>
-          Use this section to explain what happens after booking — link out to
+          Use this section to explain what happens after booking link out to
           your scheduling tool, or embed a calendar widget directly here.
         </p>
         <a

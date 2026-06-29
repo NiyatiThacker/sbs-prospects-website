@@ -417,7 +417,7 @@ export default function SBSTestimonials() {
                 fontWeight: "400",
               }}
             >
-              SBS Financial Services
+              SBS Prospects
             </p>
             <div style={{ width: "28px", height: "1px", background: "rgba(233,195,73,0.4)" }} />
           </div>
