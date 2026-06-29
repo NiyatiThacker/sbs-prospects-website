@@ -294,12 +294,12 @@ export default function TrustBar() {
           gap: 48, whiteSpace: "nowrap",
         }}>
           {[
-            "Legacy-Focused Wealth Planning", "Disciplined Financial Guidance",
-            "Long-Term Relationship Driven Advisory", "Structured Investment Thinking",
-            "Preserving Wealth Across Generations", "Clarity Through Every Financial Stage",
-            "Legacy-Focused Wealth Planning", "Disciplined Financial Guidance",
-            "Long-Term Relationship Driven Advisory", "Structured Investment Thinking",
-            "Preserving Wealth Across Generations", "Clarity Through Every Financial Stage",
+            "Career Programs", "Placement Assistance",
+            "Internship Support", "Industry Based Training",
+            "Live Projects", "Expert Trainers",
+            "Career Programs", "Placement Assistance",
+            "Internship Support", "Industry Based Training",
+            "Live Projects", "Expert Trainers",
           ].map((text, i) => (
             <span key={i} style={{
               fontSize: 10, letterSpacing: "0.26em", textTransform: "uppercase",

@@ -30,7 +30,7 @@ interface CardData {
 const CARDS: CardData[] = [
   {
     id: 1,
-    title: "Trusted Financial Guidance",
+    title: "Industry Based Training",
     image: "/images/WhyChooseSbs/card1.jpg",
     bullets: [
       { label: "Fiduciary First", description: "Your interests always come before ours — legally and ethically." },
@@ -40,7 +40,7 @@ const CARDS: CardData[] = [
   },
   {
     id: 2,
-    title: "Structured Wealth Planning",
+    title: "Career Focused Programs",
     image: "/images/WhyChooseSbs/card2.jpg",
     bullets: [
       { label: "Data-Driven Frameworks", description: "Every strategy backed by rigorous quantitative analysis." },
@@ -50,7 +50,7 @@ const CARDS: CardData[] = [
   },
   {
     id: 3,
-    title: "Personalized Advisory",
+    title: "Expert Trainers",
     image: "/images/WhyChooseSbs/card3.jpg",
     bullets: [
       { label: "One Dedicated Advisor", description: "A single trusted expert who knows your complete financial picture." },
@@ -60,7 +60,7 @@ const CARDS: CardData[] = [
   },
   {
     id: 4,
-    title: "Long-Term Financial Vision",
+    title: "HR Consultancy Support",
     image: "/images/WhyChooseSbs/card4.jpg",
     bullets: [
       { label: "Generational Thinking", description: "Building wealth that outlasts you and benefits those who follow." },

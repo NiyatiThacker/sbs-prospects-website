@@ -20,9 +20,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SBS Financial Services",
+  title: "SBS PROSPECTS",
   description:
-    "Premium financial planning and wealth management services.",
+    "Build Your Career with Industry-Focused Training",
 };
 
 export default function RootLayout({
