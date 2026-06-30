@@ -1173,18 +1173,15 @@ export default function TrustBar() {
           <div className="sbs-marquee-block">
             <div className="sbs-marquee-inner" aria-hidden="true">
               {[
-                "Legacy-Focused Wealth Planning",
-                "Disciplined Financial Guidance",
-                "Long-Term Relationship Driven Advisory",
+                "Industry Based Training",
+                "Live Projects",
+                "Expert Trainers",
                 "Structured Investment Thinking",
-                "Preserving Wealth Across Generations",
-                "Clarity Through Every Financial Stage",
-                "Legacy-Focused Wealth Planning",
-                "Disciplined Financial Guidance",
-                "Long-Term Relationship Driven Advisory",
-                "Structured Investment Thinking",
-                "Preserving Wealth Across Generations",
-                "Clarity Through Every Financial Stage",
+                "Career Programs",
+                "Placement Assistance",
+                "Internship Support",
+                "Student Mentorship",
+                "Skill Development",
               ].map((text, i) => (
                 <span key={i} className="sbs-marquee-text">{text}</span>
               ))}

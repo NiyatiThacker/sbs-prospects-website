@@ -60,16 +60,20 @@ const cardWrapStyle: CSSProperties = {
   position: "relative",
   borderRadius: "1.5rem",
   overflow: "hidden",
+  display: "flex",
+  flexDirection: "column",
+  height: "100%",
 };
 
 const glassPanelStyle: CSSProperties = {
-  borderRadius: "1rem",
-  border: "1px solid rgba(255,255,255,0.2)",
-  background: "rgba(255,255,255,0.1)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-  padding: "2.5rem",
+  borderRadius: "1.25rem",
+  border: "1px solid rgba(255,255,255,0.25)",
+  background: "rgba(255,255,255,0.08)",
+  backdropFilter: "blur(16px)",
+  WebkitBackdropFilter: "blur(16px)",
+  padding: "3rem 2rem",
   textAlign: "center",
+  boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.25)",
 };
 
 export default function ContactForm() {
@@ -84,26 +88,49 @@ export default function ContactForm() {
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-  e.preventDefault();
-  setStatus("sending");
+    e.preventDefault();
+    setStatus("sending");
 
-  try {
-    await fetch("YOUR_SCRIPT_URL", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
+    const scriptUrl = process.env.NEXT_PUBLIC_CONTACT_SCRIPT_URL;
+    const spreadsheetId = process.env.NEXT_PUBLIC_SPREADSHEET_ID;
 
-    setStatus("sent");
-    setForm(initialForm);
-  } catch (error) {
-    console.error(error);
-    setStatus("idle");
-    alert("Error sending message");
+    if (!scriptUrl || !spreadsheetId) {
+      console.error("Environment variables are missing.");
+      setStatus("idle");
+      alert("System configuration error. Please check your .env file.");
+      return;
+    }
+
+    try {
+      // Temporarily removed mode: "no-cors" so we can read the server's error message
+      const response = await fetch(scriptUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          ...form,
+          spreadsheetId: spreadsheetId,
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Server Response:", data);
+
+      if (data.status === "success") {
+        setStatus("sent");
+        setForm(initialForm);
+      } else {
+        console.error("Server Error:", data.error);
+        setStatus("idle");
+        alert("Google Sheets Error: " + data.error); // This will show the exact error!
+      }
+    } catch (error) {
+      console.error("Fetch Error:", error);
+      setStatus("idle");
+      alert("Error sending message. Check browser console (F12).");
+    }
   }
-}
 
   return (
     <section style={sectionStyle} className="w-full bg-white md:px-16! md:py-24!">
@@ -136,11 +163,11 @@ export default function ContactForm() {
           <div
             style={{
               position: "relative",
-              minHeight: 560,
+              flex: 1,
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              padding: "2.5rem 1.5rem",
+              padding: "1.25rem",
             }}
           >
             <div style={glassPanelStyle}>
@@ -150,7 +177,7 @@ export default function ContactForm() {
               <p style={{ marginTop: "0.75rem", color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
                 1003, Span Trade Center
                 <br />
-                Pritam Nagar,Paldi,
+                Pritam Nagar, Paldi,
                 <br />
                 Ahmedabad, Gujarat 380006
               </p>
