@@ -43,7 +43,7 @@ export default function AboutHero() {
           <br />
           through
           <br />
-          <em className="italic text-[#C4A052] not-italic" style={{ fontStyle: "italic" }}>
+          <em className="italic text-[#C4A052]">
             hands-on
           </em>
           <br />
