@@ -63,7 +63,7 @@ export default function FloatingButton({ isOpen, toggle }: FloatingButtonProps) 
           padding: '0',
           cursor: 'pointer'
         }}
-        className="relative z-10 bg-gradient-to-br from-[#C9A84C] to-[#A18231] text-white rounded-full shadow-[0_8px_30px_rgba(26,22,10,0.2)] hover:shadow-[0_8px_30px_rgba(26,22,10,0.3)] transition-all"
+        className="relative z-10 bg-linear-to-br from-[#C9A84C] to-[#A18231] text-white rounded-full shadow-[0_8px_30px_rgba(26,22,10,0.2)] hover:shadow-[0_8px_30px_rgba(26,22,10,0.3)] transition-all"
         aria-label="Toggle chat"
       >
         <motion.div

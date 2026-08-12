@@ -112,7 +112,7 @@ export default function ChatWidget({ onClose }: ChatWidgetProps) {
       {/* Header */}
       <div 
         style={{ padding: '20px', paddingBottom: '24px' }}
-        className="bg-gradient-to-br from-[#C9A84C] to-[#7A6A1E] text-white flex items-start justify-between relative shrink-0 rounded-t-[22px]"
+        className="bg-linear-to-br from-[#C9A84C] to-[#7A6A1E] text-white flex items-start justify-between relative shrink-0 rounded-t-[22px]"
       >
         {/* Background Graphic */}
         <div className="absolute right-0 bottom-0 opacity-30 pointer-events-none">
@@ -129,14 +129,14 @@ export default function ChatWidget({ onClose }: ChatWidgetProps) {
 
         <div className="flex gap-4 items-center z-10">
           {/* Avatar */}
-          <div className="w-12 h-12 bg-gradient-to-br from-[#C9A84C] to-[#A18231] rounded-full flex items-center justify-center border-2 border-[#FAF6F0]/35 shadow-inner">
+          <div className="w-12 h-12 bg-linear-to-br from-[#C9A84C] to-[#A18231] rounded-full flex items-center justify-center border-2 border-[#FAF6F0]/35 shadow-inner">
              <Bot size={24} className="text-[#FAF6F0]" />
           </div>
           <div>
             <h2 className="font-bold text-xl flex items-center gap-1.5 tracking-tight">
               CareerAI <span className="text-[#FAF6F0]">✨</span>
             </h2>
-            <div className="text-[11px] !text-white mt-0.5 font-medium tracking-wide">
+            <div className="text-[11px] text-white! mt-0.5 font-medium tracking-wide">
               Powered by Training & HR
             </div>
             <div className="flex items-center gap-1.5 mt-1 text-[10px] text-slate-300 font-semibold uppercase tracking-wider">
@@ -185,7 +185,7 @@ export default function ChatWidget({ onClose }: ChatWidgetProps) {
             
             {/* Quick Actions */}
             {index === 0 && messages.length === 1 && (
-              <div className="grid grid-cols-2 gap-2 mt-1 mb-6 ml-[3.25rem] pr-2">
+              <div className="grid grid-cols-2 gap-2 mt-1 mb-6 ml-13 pr-2">
                 {QUICK_ACTIONS.map((action, i) => (
                   <button
                     key={i}
@@ -203,7 +203,7 @@ export default function ChatWidget({ onClose }: ChatWidgetProps) {
                       cursor: 'pointer',
                       transition: 'all 0.2s'
                     }}
-                    className="hover:!border-[#C9A84C] hover:!bg-[#C9A84C]/10 hover:shadow-sm group disabled:opacity-50"
+                    className="hover:border-[#C9A84C]! hover:bg-[#C9A84C]/10! hover:shadow-sm group disabled:opacity-50"
                   >
                     <div 
                       style={{
@@ -217,7 +217,7 @@ export default function ChatWidget({ onClose }: ChatWidgetProps) {
                         flexShrink: 0,
                         transition: 'colors 0.2s'
                       }}
-                      className="text-[#7A6A1E] group-hover:!bg-[#7A6A1E] group-hover:!text-[#fff8ef]"
+                      className="text-[#7A6A1E] group-hover:bg-[#7A6A1E]! group-hover:text-[#fff8ef]!"
                     >
                       <action.icon size={14} className="stroke-[2.5]" />
                     </div>
@@ -233,7 +233,7 @@ export default function ChatWidget({ onClose }: ChatWidgetProps) {
         
         {isLoading && (
           <div className="flex justify-start mb-6">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#A18231] flex items-center justify-center shrink-0 mr-3 shadow-sm border border-[#FAF6F0]/35">
+            <div className="w-9 h-9 rounded-full bg-linear-to-br from-[#C9A84C] to-[#A18231] flex items-center justify-center shrink-0 mr-3 shadow-sm border border-[#FAF6F0]/35">
                <Bot size={18} className="text-[#FAF6F0]" />
             </div>
             <div className="bg-white border border-slate-100 px-5 py-4 rounded-3xl rounded-tl-sm shadow-sm flex gap-1.5 items-center mt-0.5">

@@ -174,7 +174,7 @@ const HeroSection: React.FC = () => {
 
       {/* 4. Text Content */}
       <Container className="relative z-10 pt-28 sm:pt-32">
-        <div className="max-w-[800px] max-sm:max-w-[90%]">
+        <div className="max-w-200 max-sm:max-w-[90%]">
           {/* Eyebrow */}
           <motion.div 
             style={styles.eyebrow}

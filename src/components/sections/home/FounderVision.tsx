@@ -41,7 +41,7 @@ export default function FounderVision() {
       {/* ── TOP GOLD RULE ── */}
       <div style={{ height: 1, background: "linear-gradient(90deg, transparent, #C9A84C 40%, #C9A84C 60%, transparent)" }} />
 
-      <div className="max-w-[90rem] mx-auto px-6 lg:px-16 py-20 lg:py-32">
+      <div className="max-w-360 mx-auto px-6 lg:px-16 py-20 lg:py-32">
 
         {/* ═══════════════════════════════════
             TOP LABEL
