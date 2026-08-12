@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 export default function CTABanner() {
   const s1Ref = useRef<HTMLSpanElement>(null);
@@ -50,7 +51,7 @@ useEffect(() => {
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (s1Ref.current) animateCount(s1Ref.current, 500, "+", 1800);
-      if (s2Ref.current) animateCount(s2Ref.current, 12, "+", 1200);
+      if (s2Ref.current) animateCount(s2Ref.current, 6, "+", 1200);
       if (s3Ref.current) animateCount(s3Ref.current, 98, "%", 1600);
     }, 900);
     return () => clearTimeout(timeout);
@@ -149,50 +150,51 @@ useEffect(() => {
         /* ── Box ── */
         .sbs-cta-box {
           max-width:820px;margin:0 auto;position:relative;
-          border:1px solid rgba(233,195,73,0.28);
-          padding:54px 58px;
-          background:rgba(255,248,239,0.5);
-          backdrop-filter:blur(8px);
-          -webkit-backdrop-filter:blur(8px);
+          border: 8px solid #fffdf9;
+          outline: 1px solid #e9c349;
+          padding: 40px 58px;
+          background:#fffdf9;
+          background-image: radial-gradient(circle at center, rgba(233,195,73,0.02) 0%, transparent 100%);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.08);
           text-align:center;
           transition:box-shadow 0.5s ease;
           animation:fadeUp 0.9s 0.2s both;
         }
-        .sbs-cta-box:hover {
-          box-shadow:0 0 60px rgba(233,195,73,0.08),0 20px 60px rgba(0,6,19,0.06);
-        }
         .sbs-cta-box::before {
-          content:'';position:absolute;top:10px;left:10px;right:10px;bottom:10px;
-          border:1px solid rgba(233,195,73,0.1);pointer-events:none;
-          transition:border-color 0.4s;
+          content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+          border: 4px double #e9c349;
+          pointer-events:none;
         }
-        .sbs-cta-box:hover::before { border-color:rgba(233,195,73,0.18); }
+        .sbs-cta-box::after {
+          content:'';position:absolute;top:8px;left:8px;right:8px;bottom:8px;
+          border: 1px solid rgba(233,195,73,0.4);
+          pointer-events:none;
+        }
 
         /* ── Corners ── */
         .sbs-corner {
-          position:absolute;width:20px;height:20px;
-          transition:all 0.5s cubic-bezier(0.22,1,0.36,1);
+          position:absolute;width:40px;height:40px;
+          background:#fffdf9;
+          border:1px solid #e9c349;
+          z-index: 3;
+          display:flex;align-items:center;justify-content:center;
         }
-        .sbs-corner.tl { top:-1px;left:-1px;  border-top:2px solid #e9c349;border-left:2px solid #e9c349; }
-        .sbs-corner.tr { top:-1px;right:-1px; border-top:2px solid #e9c349;border-right:2px solid #e9c349; }
-        .sbs-corner.bl { bottom:-1px;left:-1px;  border-bottom:2px solid #e9c349;border-left:2px solid #e9c349; }
-        .sbs-corner.br { bottom:-1px;right:-1px; border-bottom:2px solid #e9c349;border-right:2px solid #e9c349; }
-        .sbs-cta-box:hover .sbs-corner { width:32px;height:32px;filter:drop-shadow(0 0 4px rgba(233,195,73,0.5)); }
+        .sbs-corner.tl { top:-20px;left:-20px; }
+        .sbs-corner.tr { top:-20px;right:-20px; }
+        .sbs-corner.bl { bottom:-20px;left:-20px; }
+        .sbs-corner.br { bottom:-20px;right:-20px; }
 
-        .sbs-corner-dot {
-          position:absolute;width:5px;height:5px;border-radius:50%;
-          background:#e9c349;opacity:0;transition:opacity 0.4s;
+        .sbs-corner-inner {
+          width: 24px; height: 24px;
+          border: 1px solid #e9c349;
+          transform: rotate(45deg);
         }
-        .sbs-corner.tl .sbs-corner-dot { top:-2px;left:-2px; }
-        .sbs-corner.tr .sbs-corner-dot { top:-2px;right:-2px; }
-        .sbs-corner.bl .sbs-corner-dot { bottom:-2px;left:-2px; }
-        .sbs-corner.br .sbs-corner-dot { bottom:-2px;right:-2px; }
-        .sbs-cta-box:hover .sbs-corner-dot { opacity:1;box-shadow:0 0 8px rgba(233,195,73,0.8); }
 
         /* ── Label ── */
         .sbs-cta-label {
           font-size:10px;letter-spacing:0.32em;text-transform:uppercase;
-          color:#e9c349;font-weight:500;margin-bottom:20px;display:block;
+          color:#e9c349;font-weight:500;margin-bottom:-30px;display:block;
+          position:relative;z-index:20;
           animation:fadeUp 0.7s 0.4s both;
         }
 
@@ -330,12 +332,49 @@ useEffect(() => {
           width:1px;height:30px;
           background:linear-gradient(180deg,transparent,rgba(233,195,73,0.4),transparent);
         }
+
+        /* ── Mobile Responsiveness ── */
+        @media (max-width: 768px) {
+          .sbs-cta-box {
+            padding: 30px 20px;
+            border-width: 4px;
+          }
+          .sbs-cta-heading {
+            font-size: 22px;
+          }
+          .sbs-cta-sub {
+            font-size: 12px;
+            padding: 0 10px;
+          }
+          .sbs-cta-stats {
+            flex-direction: column;
+            gap: 24px;
+          }
+          .sbs-cta-stat {
+            padding: 0;
+            width: 100%;
+          }
+          .sbs-stat-divider {
+            width: 60%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(233,195,73,0.4), transparent);
+            margin: 0 auto;
+          }
+          .sbs-cta-btns {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 0 10px;
+          }
+          .sbs-btn-primary, .sbs-btn-secondary {
+            justify-content: center;
+          }
+        }
       `}</style>
 
       <section
         style={{
           background: "#fbf3e4",
-          padding: "80px 40px",
+          padding: "80px 5%",
           position: "relative",
           overflow: "hidden",
           fontFamily: "var(--font-inter), sans-serif",
@@ -371,23 +410,37 @@ useEffect(() => {
 
         {/* Framed Box */}
         <div className="sbs-cta-box">
-          <div className="sbs-corner tl"><div className="sbs-corner-dot" /></div>
-          <div className="sbs-corner tr"><div className="sbs-corner-dot" /></div>
-          <div className="sbs-corner bl"><div className="sbs-corner-dot" /></div>
-          <div className="sbs-corner br"><div className="sbs-corner-dot" /></div>
+          <div className="sbs-corner tl"><div className="sbs-corner-inner" /></div>
+          <div className="sbs-corner tr"><div className="sbs-corner-inner" /></div>
+          <div className="sbs-corner bl"><div className="sbs-corner-inner" /></div>
+          <div className="sbs-corner br"><div className="sbs-corner-inner" /></div>
+          
+          {/* Certificate Watermark */}
+          <div style={{ position: "absolute", inset: 0, display: "flex", justifyContent: "center", alignItems: "center", opacity: 0.04, pointerEvents: "none", zIndex: 1 }}>
+            <Image
+              src="/logo/Sbs-1.png"
+              alt="Watermark"
+              width={600}
+              height={600}
+              className="object-contain"
+              style={{ width: "auto", height: "auto" }}
+            />
+          </div>
 
           <div style={{ position: "relative", zIndex: 2 }}>
             {/* Label */}
             <span className="sbs-cta-label">Professional Career Counseling</span>
 
-            {/* Ornament */}
-            <div className="sbs-ornament">
-              <div className="sbs-orn-line" />
-              <div className="sbs-diamond-wrap">
-                <div className="sbs-diamond-ring" />
-                <div className="sbs-diamond" />
-              </div>
-              <div className="sbs-orn-line r" />
+            {/* Logo in normal flow to prevent overlap */}
+            <div className="flex justify-center relative z-10" style={{ marginTop: "-40px", marginBottom: "-70px" }}>
+              <Image
+                src="/logo/Sbs-1.png"
+                alt="SBS Prospects"
+                width={260}
+                height={85}
+                className="object-contain"
+                style={{ width: "auto", height: "auto" }}
+              />
             </div>
 
             {/* Heading */}
@@ -440,21 +493,21 @@ useEffect(() => {
             <div className="sbs-cta-stats">
               <div className="sbs-cta-stat">
                 <span className="sbs-stat-num" ref={s1Ref}>
-                  0<span style={{ color: "#e9c349" }}>+</span>
+                  500<span style={{ color: "#e9c349" }}>+</span>
                 </span>
                 <span className="sbs-stat-lbl">Clients Served</span>
               </div>
               <div className="sbs-stat-divider" />
               <div className="sbs-cta-stat">
                 <span className="sbs-stat-num" ref={s2Ref}>
-                  0<span style={{ color: "#e9c349" }}>+</span>
+                  6<span style={{ color: "#e9c349" }}>+</span>
                 </span>
                 <span className="sbs-stat-lbl">Years Experience</span>
               </div>
               <div className="sbs-stat-divider" />
               <div className="sbs-cta-stat">
                 <span className="sbs-stat-num" ref={s3Ref}>
-                  0<span style={{ color: "#e9c349" }}>%</span>
+                  98<span style={{ color: "#e9c349" }}>%</span>
                 </span>
                 <span className="sbs-stat-lbl">Client Retention</span>
               </div>

@@ -231,10 +231,10 @@ export default function TrustBar() {
           el.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
           el.style.opacity = "1";
         } else if (item.isCard) {
-          const currentAngle =
-            item.baseAngle +
-            (idleRotation + easedProgress * 90) * (1 - t);
-          const rad = (currentAngle * Math.PI) / 180;
+          // Fix: Do not multiply idleRotation by (1 - t), which causes massive angle jumps on scroll.
+          // Instead, calculate the smooth orbit angle, and scale the physical distance by (1 - t).
+          const orbitAngle = item.baseAngle + idleRotation + (easedProgress * 90);
+          const rad = (orbitAngle * Math.PI) / 180;
 
           const circleX = cx + radius * Math.cos(rad);
           const circleY = cy + radius * Math.sin(rad);
@@ -1056,6 +1056,7 @@ export default function TrustBar() {
                     width={84}
                     height={84}
                     priority
+                    style={{ width: "auto", height: "auto" }}
                   />
                 </div>
               </div>
@@ -1141,10 +1142,10 @@ export default function TrustBar() {
 
             {/* Quotes */}
             <div className="sbs-grid-item sbs-grid-quote" id="quote1">
-              <p className="sbs-quote-text">EVERYTHING AROUND YOU THAT YOU CALLED LIFE</p>
+              <p className="sbs-quote-text"></p>
             </div>
             <div className="sbs-grid-item sbs-grid-quote" id="quote2">
-              <p className="sbs-quote-text">WAS MADE BY PEOPLE THAT WERE NO SMARTER THAN YOU.</p>
+              <p className="sbs-quote-text"></p>
             </div>
 
             {/* Corner Decor Texts */}

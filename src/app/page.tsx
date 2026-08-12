@@ -2,7 +2,6 @@ import ScrollProgress from "@/components/animations/ScrollProgress";
 import HeroSection from "@/components/sections/home/HeroSection";
 import TrustBar from "@/components/sections/home/TrustBar";
 import ServicesSection from "@/components/sections/home/ServicesSection";
-import AboutSnippet from "@/components/sections/home/AboutSnippet";
 import WhyChooseUs from "@/components/sections/home/WhyChooseSbs";
 import Testimonials from "@/components/sections/home/Testimonials";
 import FAQSection from "@/components/sections/home/FAQSection";
@@ -15,7 +14,6 @@ export default function HomePage() {
       <HeroSection />
       <TrustBar />
       <ServicesSection />
-      <AboutSnippet />
       <WhyChooseUs />
       <Testimonials />
       <FAQSection />

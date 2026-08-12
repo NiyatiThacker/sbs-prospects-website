@@ -13,7 +13,7 @@ const marqueeItems = [
   "MBA SKILL DEVELOPMENT COURSES",
   "HR CONSULTANCY",
   "Ahmedabad",
-  "6 Years",
+  "6+ Years",
   "CAREER GUIDANCE",
   "RECRUITMENT SUPPORT",
   "INTERNSHIP PROGRAMS",

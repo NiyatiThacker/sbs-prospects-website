@@ -516,7 +516,7 @@ export default function AboutCTA() {
                 </div>
               </div>
 
-              {/* 15+ badge */}
+              {/* 6+ badge */}
               <div
                 className={active ? "sbs-badge-show" : "sbs-badge-hidden"}
                 style={{

@@ -5,7 +5,7 @@ import { motion, useInView } from "framer-motion";
 
 const CREDENTIALS = [
   { value: "SEBI", label: "Registered Advisor" },
-  { value: "15+",  label: "Years of Experience" },
+  { value: "6+",  label: "Years of Experience" },
   { value: "NISM", label: "Certified Planner" },
   { value: "AIF",  label: "Wealth Specialist" },
 ];

@@ -48,7 +48,7 @@ const SERVICES = [
       "Annual Staffing Alignment",
     ],
     stat1: { val: "50+", label: "Hiring Partners" },
-    stat2: { val: "100%", label: "Success Rate" },
+    stat2: { val: "95%+", label: "Placement Success" },
   },
   {
     id: "Career Guidance",
@@ -96,7 +96,7 @@ const SERVICES = [
       "PPO Opportunities",
     ],
     stat1: { val: "650+", label: "Internships Secured" },
-    stat2: { val: "10+", label: "Corporate Partners" },
+    stat2: { val: "50+", label: "Corporate Partners" },
   },
 ];
 
