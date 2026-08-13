@@ -101,7 +101,7 @@ export default function AboutSection() {
           top: 0; left: 0; right: 0;
           height: 2px;
           background: #7A6A1E;
-          transform-origin: left;
+          transform-origin: center;
         }
         .sbs-stat-bar-0::before { animation: sbsBarScale 0.55s ease both; animation-delay: 1.1s; }
         .sbs-stat-bar-1::before { animation: sbsBarScale 0.55s ease both; animation-delay: 1.28s; }
@@ -143,13 +143,13 @@ export default function AboutSection() {
         .sbs-stat-cell {
           padding-top: 28px;
           padding-bottom: 20px;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
         .sbs-stat-cell:not(:first-child) {
-          padding-left: 40px;
           border-left: 1px solid rgba(122,106,30,0.12);
-        }
-        .sbs-stat-cell:not(:last-child) {
-          padding-right: 40px;
         }
 
         /* ── Layout: marquee ── */

@@ -25,7 +25,15 @@ const NavbarSection: React.FC = () => {
       <div className="max-w-300 mx-auto h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 font-[Montserrat]">
 
         {/* LOGO */}
-        <Link href="/" className="flex items-center">
+        <Link 
+          href="/" 
+          onClick={(e) => {
+            if (pathname === "/") {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
+          className="flex items-center"
+        >
           <Image
             src="/logo/Sbs-1.png"
             alt="SBS Prospects"
@@ -49,6 +57,18 @@ const NavbarSection: React.FC = () => {
                 <li key={link.label}>
                   <Link
                     href={link.href}
+                    onClick={(e) => {
+                      if (pathname === link.href) {
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } else if (link.href.includes("#") && pathname === link.href.split("#")[0]) {
+                        const targetId = link.href.split("#")[1];
+                        const element = document.getElementById(targetId);
+                        if (element) {
+                          e.preventDefault();
+                          element.scrollIntoView({ behavior: "smooth" });
+                        }
+                      }
+                    }}
                     className={`text-[12px] font-semibold tracking-[0.08em] uppercase pb-0.5 border-b-2 transition-all duration-200
                     ${
                       isActive
@@ -94,7 +114,19 @@ const NavbarSection: React.FC = () => {
             <Link
               key={link.label}
               href={link.href}
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => {
+                setMenuOpen(false);
+                if (pathname === link.href) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else if (link.href.includes("#") && pathname === link.href.split("#")[0]) {
+                  const targetId = link.href.split("#")[1];
+                  const element = document.getElementById(targetId);
+                  if (element) {
+                    e.preventDefault();
+                    setTimeout(() => element.scrollIntoView({ behavior: "smooth" }), 300); // delay for mobile menu close animation
+                  }
+                }
+              }}
               className={`text-lg font-semibold uppercase tracking-[0.08em]
               ${isActive ? "text-black" : "text-gray-600 hover:text-black"}`}
             >

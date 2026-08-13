@@ -13,6 +13,12 @@ export default function Footer() {
     if (pathname === targetPath) {
       if (!href.includes('#')) {
         window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        const targetId = href.split('#')[1];
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
       }
     }
   };
@@ -495,12 +501,18 @@ export default function Footer() {
             </a>
 
             {/* Email */}
-            <div className="sbs-contact-item">
+            <a
+              href="mailto:prospectssbs@gmail.com"
+              className="sbs-contact-item"
+              style={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
+            >
               <div className="sbs-contact-icon">
                 <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </div>
-              <span style={{ fontSize: "12px", color: "#735c00", lineHeight: 1.65, fontWeight: 300 }}>prospectssbs@gmail.com</span>
-            </div>
+              <span style={{ fontSize: "12px", color: "#735c00", lineHeight: 1.65, fontWeight: 300 }} className="hover:text-[#5a4800] transition-colors">
+                prospectssbs@gmail.com
+              </span>
+            </a>
 
             {/* Blended Timings Row */}
             <div className="sbs-contact-item">

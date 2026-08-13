@@ -1,13 +1,6 @@
 "use client";
 
-import { Playfair_Display } from "next/font/google";
 import { useEffect, useRef, useState } from "react";
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  style: ["normal", "italic"],
-});
 
 function useInView<T extends HTMLElement>() {
   const ref = useRef<T>(null);
@@ -84,7 +77,7 @@ export default function ContactHero() {
             />
           </span>
 
-          <h2 className={`${playfair.className} leading-[1.1] text-[#A9802F]`}>
+          <h2 className="leading-[1.1] text-[#A9802F]" style={{ fontFamily: "var(--font-playfair), serif" }}>
             <span className="block text-4xl font-semibold sm:text-5xl md:text-6xl mask-right" style={{ marginBottom: "8px", marginTop: "8px" }}>
               Ready to
             </span>

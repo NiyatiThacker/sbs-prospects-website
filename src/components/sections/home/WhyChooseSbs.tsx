@@ -1,19 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Playfair_Display, DM_Sans } from "next/font/google";
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-playfair",
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-dm-sans",
-});
 
 interface BulletPoint {
   label: string;
@@ -177,7 +164,6 @@ export default function WhyChooseSBS() {
 
   return (
     <section
-      className={`${playfair.variable} ${dmSans.variable}`}
       style={{
         backgroundColor: "#fff8ef",
         minHeight: "100vh",
@@ -186,7 +172,7 @@ export default function WhyChooseSBS() {
         alignItems: "center",
         justifyContent: "center",
         padding: "80px 24px",
-        fontFamily: "var(--font-dm-sans), sans-serif",
+        fontFamily: "var(--font-inter), sans-serif",
         overflow: "hidden",
       }}
     >
@@ -201,7 +187,7 @@ export default function WhyChooseSBS() {
           border: `1px solid ${GOLD}40`,
           padding: "6px 18px", borderRadius: "20px",
           marginBottom: "22px",
-          fontFamily: "var(--font-dm-sans), sans-serif",
+          fontFamily: "var(--font-inter), sans-serif",
         }}>
           Why Choose SBS
         </span>
@@ -384,7 +370,7 @@ function CardItem({ card, isActive, isFlipped }: { card: CardData; isActive: boo
           {card.bullets.map((bullet, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               <span style={{
-                fontFamily: "var(--font-dm-sans), sans-serif",
+                fontFamily: "var(--font-inter), sans-serif",
                 fontSize: "9px", fontWeight: 700,
                 letterSpacing: "2.5px", textTransform: "uppercase",
                 color: GOLD_LIGHT,
@@ -392,7 +378,7 @@ function CardItem({ card, isActive, isFlipped }: { card: CardData; isActive: boo
                 {bullet.label}
               </span>
               <span style={{
-                fontFamily: "var(--font-dm-sans), sans-serif",
+                fontFamily: "var(--font-inter), sans-serif",
                 fontSize: "13px", fontWeight: 400,
                 color: "rgba(255,255,255,0.78)", lineHeight: 1.55,
               }}>
@@ -406,7 +392,7 @@ function CardItem({ card, isActive, isFlipped }: { card: CardData; isActive: boo
           marginTop: "22px", fontSize: "10px",
           color: "rgba(255,255,255,0.32)",
           letterSpacing: "1.5px", textTransform: "uppercase",
-          fontFamily: "var(--font-dm-sans), sans-serif",
+          fontFamily: "var(--font-inter), sans-serif",
         }}>
           Click to close
         </p>

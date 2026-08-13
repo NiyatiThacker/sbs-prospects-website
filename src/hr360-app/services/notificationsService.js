@@ -24,7 +24,7 @@ export async function getNotifications() {
       timestamp: n.created_at
     }));
   } catch (err) {
-    console.error('[Supabase] Error fetching notifications:', err);
+    console.error('[Supabase] Error fetching notifications:', err?.message || err, err?.code, err?.details);
     return [];
   }
 }

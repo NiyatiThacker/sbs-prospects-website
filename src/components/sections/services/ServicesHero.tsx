@@ -31,8 +31,8 @@ export default function ServicesHero() {
   return (
     <section
       style={{
-        backgroundColor: "#1e1b13",
-        backgroundImage: "radial-gradient(circle at top, rgba(255,248,239,0.08) 0%, transparent 60%), radial-gradient(circle at bottom right, rgba(233,195,73,0.1) 0%, transparent 50%)",
+        backgroundColor: "#5C3A21",
+        backgroundImage: "radial-gradient(circle at top, rgba(255,255,255,0.08) 0%, transparent 60%), radial-gradient(circle at bottom right, rgba(0,0,0,0.2) 0%, transparent 60%)",
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
@@ -46,7 +46,7 @@ export default function ServicesHero() {
       }}
     >
       {/* Background Scrolling Marquee */}
-      <div style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", zIndex: 0, overflow: "hidden", pointerEvents: "none", opacity: 0.04 }}>
+      <div style={{ position: "absolute", top: "50%", left: 0, width: "100%", transform: "translateY(-50%)", zIndex: 0, overflow: "hidden", pointerEvents: "none", opacity: 0.12 }}>
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
           transition={{ repeat: Infinity, ease: "linear", duration: 30 }}
@@ -83,9 +83,9 @@ export default function ServicesHero() {
               left: `${Math.random() * 100}%`,
               width: `${2 + Math.random() * 3}px`,
               height: `${2 + Math.random() * 3}px`,
-              backgroundColor: "#e9c349",
+              backgroundColor: "#ffffff",
               borderRadius: "50%",
-              boxShadow: "0 0 8px 1px rgba(233,195,73,0.5)",
+              boxShadow: "0 0 8px 1px rgba(255,255,255,0.5)",
             }}
           />
         ))}
@@ -104,7 +104,7 @@ export default function ServicesHero() {
             fontSize: "0.65rem",
             letterSpacing: "0.38em",
             textTransform: "uppercase",
-            color: "#e9c349",
+            color: "#fff8ef",
             fontWeight: 500,
             marginBottom: "24px",
           }}
@@ -135,7 +135,7 @@ export default function ServicesHero() {
             fontSize: "0.6rem",
             letterSpacing: "0.38em",
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.68)",
+            color: "rgba(255,255,255,0.85)",
             fontWeight: 400,
             marginBottom: "52px",
           }}

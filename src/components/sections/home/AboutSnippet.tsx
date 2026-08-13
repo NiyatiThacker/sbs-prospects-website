@@ -103,29 +103,7 @@ export default function AboutSnippet() {
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
   }, []);
 
-  /* ── Custom cursor ── */
-  useEffect(() => {
-    let rx = 0, ry = 0, mx = 0, my = 0, rafId: number;
-    const onMove = (e: MouseEvent) => {
-      mx = e.clientX; my = e.clientY;
-      if (curDotRef.current) {
-        curDotRef.current.style.left = mx + "px";
-        curDotRef.current.style.top  = my + "px";
-      }
-    };
-    const animRing = () => {
-      rx += (mx - rx) * 0.11;
-      ry += (my - ry) * 0.11;
-      if (curRingRef.current) {
-        curRingRef.current.style.left = rx + "px";
-        curRingRef.current.style.top  = ry + "px";
-      }
-      rafId = requestAnimationFrame(animRing);
-    };
-    animRing();
-    document.addEventListener("mousemove", onMove);
-    return () => { document.removeEventListener("mousemove", onMove); cancelAnimationFrame(rafId); };
-  }, []);
+
 
   /* ── Parallax ── */
   useEffect(() => {
@@ -154,28 +132,7 @@ export default function AboutSnippet() {
   return (
     <>
       <style>{`
-        * { cursor: none !important; }
 
-        /* ── cursor ── */
-        .sbs-cur-dot {
-          position: fixed; border-radius: 50%;
-          pointer-events: none; z-index: 9999;
-          transform: translate(-50%, -50%);
-          transition: width .25s, height .25s;
-          mix-blend-mode: multiply;
-          width: 10px; height: 10px;
-          background: #C9A84C;
-        }
-        .sbs-cur-dot.big { width: 20px; height: 20px; }
-        .sbs-cur-ring {
-          position: fixed; border-radius: 50%;
-          border: 1.5px solid rgba(201,168,76,0.55);
-          pointer-events: none; z-index: 9998;
-          transform: translate(-50%, -50%);
-          transition: width .25s, height .25s;
-          width: 36px; height: 36px;
-        }
-        .sbs-cur-ring.big { width: 56px; height: 56px; }
 
         /* ── word animation ── */
         .sbs-word-outer { display:inline-block; overflow:hidden; }
@@ -348,10 +305,7 @@ export default function AboutSnippet() {
         }
       `}</style>
 
-      {/* ── Cursor dot ── */}
-      <div ref={curDotRef} className={`sbs-cur-dot${curBig ? " big" : ""}`} />
-      {/* ── Cursor ring ── */}
-      <div ref={curRingRef} className={`sbs-cur-ring${curBig ? " big" : ""}`} />
+
 
       {/* ═══════ SECTION ═══════ */}
       <section

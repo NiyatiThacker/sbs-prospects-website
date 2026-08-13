@@ -1,14 +1,7 @@
 "use client";
 
-import { Playfair_Display } from "next/font/google";
 import { Send } from "lucide-react";
 import { useState, type CSSProperties, type FormEvent } from "react";
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["600", "700"],
-  style: ["italic", "normal"],
-});
 
 // Replace these with your real profile links.
 const socialLinks = [
@@ -296,8 +289,7 @@ export default function ContactForm() {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
             <h2
-              className={playfair.className}
-              style={{ fontSize: "2.5rem", fontStyle: "italic", color: "#16162B" }}
+              style={{ fontFamily: "var(--font-playfair), serif", fontSize: "2.5rem", fontStyle: "italic", color: "#16162B" }}
             >
               SEND A MESSAGE
             </h2>

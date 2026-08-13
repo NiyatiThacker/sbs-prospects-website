@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -15,7 +15,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Briefcase,
-  AlertTriangle
+  AlertTriangle,
+  Globe
 } from 'lucide-react';
 import { useMediaQuery } from '@/hr360-app/hooks/useMediaQuery';
 import { useAuth } from '@/hr360-app/context/AuthContext';
@@ -31,7 +32,8 @@ const ICON_MAP = {
   Bell,
   MessageSquare,
   Briefcase,
-  AlertTriangle
+  AlertTriangle,
+  Globe
 };
 
 const NAV_ITEMS = [
@@ -47,6 +49,7 @@ const NAV_ITEMS = [
 
 const NAV_BOTTOM = [
   { path: '/settings', label: 'Settings', icon: 'Settings' },
+  { path: '/', label: 'Back to Website', icon: 'Globe', external: true },
 ];
 
 export default function Sidebar({ collapsed, onToggle }) {
@@ -99,7 +102,7 @@ export default function Sidebar({ collapsed, onToggle }) {
         }}
       >
         {/* Logo Circle */}
-        <div style={{
+        <Link to="/" style={{
           width: '64px',
           height: '64px',
           borderRadius: '50%',
@@ -108,10 +111,12 @@ export default function Sidebar({ collapsed, onToggle }) {
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+          boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+          textDecoration: 'none',
+          cursor: 'pointer'
         }}>
           <Activity size={28} color="#fff" />
-        </div>
+        </Link>
 
         {/* Nav Pill */}
         <motion.div 
@@ -203,15 +208,17 @@ function SidebarLink({ item, active, onNavigate, collapsed }) {
   const Icon = ICON_MAP[item.icon];
   const [isHovered, setIsHovered] = useState(false);
 
+  const Component = item.external ? 'a' : NavLink;
+  const linkProps = item.external ? { href: item.path } : { to: item.path, onClick: onNavigate };
+
   return (
     <div 
       style={{ position: 'relative' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <NavLink
-        to={item.path}
-        onClick={onNavigate}
+      <Component
+        {...linkProps}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -248,7 +255,7 @@ function SidebarLink({ item, active, onNavigate, collapsed }) {
             </motion.span>
           )}
         </AnimatePresence>
-      </NavLink>
+      </Component>
 
       <AnimatePresence>
         {isHovered && collapsed && (
