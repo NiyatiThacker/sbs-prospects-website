@@ -531,9 +531,14 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="sbs-footer-bottom">
-          <span style={{ fontSize: "11px", color: "rgba(67,71,78,0.5)" }}>
-            © 2026 SBS Prospects. All rights reserved.
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <span style={{ fontSize: "11px", color: "rgba(67,71,78,0.5)" }}>
+              © 2026 SBS Prospects. All rights reserved.
+            </span>
+            <span style={{ fontSize: "11px", color: "rgba(67,71,78,0.5)" }}>
+              Managed By <a href="https://sbsquantum.com" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(67,71,78,0.8)", textDecoration: "none", fontWeight: 500, transition: "color 0.2s" }} onMouseOver={(e) => e.currentTarget.style.color = "#E9C349"} onMouseOut={(e) => e.currentTarget.style.color = "rgba(67,71,78,0.8)"}>SBS Quantum</a>
+            </span>
+          </div>
           <div className="sbs-footer-bottom-links" style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <Link href="/privacy-policy" className="sbs-footer-legal-link">Privacy Policy</Link>
             <Link href="/terms" className="sbs-footer-legal-link">Terms &amp; Conditions</Link>
