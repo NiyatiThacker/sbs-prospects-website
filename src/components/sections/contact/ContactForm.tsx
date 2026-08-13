@@ -91,6 +91,24 @@ export default function ContactForm() {
       return;
     }
 
+    if (name === "name") {
+      const nonNumericValue = value.replace(/[0-9]/g, "");
+      setForm((prev) => ({ ...prev, [name]: nonNumericValue }));
+      if (nonNumericValue.trim() !== "") {
+        setErrors((prev) => ({ ...prev, name: undefined }));
+      }
+      return;
+    }
+
+    if (name === "email") {
+      const noSpaces = value.replace(/\s/g, "");
+      setForm((prev) => ({ ...prev, [name]: noSpaces }));
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(noSpaces)) {
+        setErrors((prev) => ({ ...prev, email: undefined }));
+      }
+      return;
+    }
+
     if (value.trim() !== "") {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -345,6 +363,11 @@ export default function ContactForm() {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
+                  onBlur={() => {
+                    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+                      setErrors((prev) => ({ ...prev, email: "Please enter a valid email address." }));
+                    }
+                  }}
                   placeholder="Email"
                   required
                   style={{ ...inputStyle, borderColor: errors.email ? "#DC2626" : "#D1D5DB" }}
