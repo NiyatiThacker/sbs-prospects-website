@@ -118,8 +118,60 @@ function showSuccessScreen(userLabel, empId) {
       // Re-fetch only if the user is still on the success screen
       if (!document.getElementById("success-screen").classList.contains("hidden")) {
         fetchAndDisplayProjects(currentEmployeeId);
+        fetchAndDisplayLeaves(currentEmployeeId);
       }
     }, 10000);
+
+    fetchAndDisplayLeaves(currentEmployeeId);
+  }
+}
+
+async function fetchAndDisplayLeaves(employeeId) {
+  const list = document.getElementById("leave-history-list");
+  if (!list) return;
+
+  if (list.innerHTML.trim() === '<p class="loading-docs">Loading history...</p>') {
+    list.innerHTML = '<p class="loading-docs">Syncing Leaves...</p>';
+  }
+
+  try {
+    const targetId = String(employeeId);
+    const { data, error } = await supabaseClient
+      .from('leave_requests')
+      .select('*')
+      .eq('employee_id', targetId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="loading-state">No leave requests found.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    data.forEach(req => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      
+      let statusClass = req.status === 'approved' ? 'status-done' : req.status === 'rejected' ? 'status-failed' : 'status-active';
+      
+      div.innerHTML = `
+        <div class="card-header">
+          <div>
+            <h4 class="card-title">${req.start_date} to ${req.end_date}</h4>
+            <div class="card-subtitle">${req.reason}</div>
+          </div>
+          <span class="status-tag ${statusClass}">
+            ${req.status.toUpperCase()}
+          </span>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Failed to load leaves:", err);
+    list.innerHTML = '<div class="loading-state" style="color:var(--color-error)">Could not load leave history.</div>';
   }
 }
 
@@ -248,11 +300,15 @@ By retrieving this file through the HR360 Desktop Agent, you confirm receipt of 
 
 // --- PROJECTS / TASKS LOGIC ---
 let projectIntervals = {};
+let lastProjectsJson = "";
 
 async function fetchAndDisplayProjects(employeeId) {
   const list = document.getElementById("projects-list");
   if (!list) return;
-  list.innerHTML = '<p class="loading-docs">Syncing Tasks...</p>';
+  // Only show the loading state if the list is completely empty (first load)
+  if (list.innerHTML.trim() === '') {
+    list.innerHTML = '<p class="loading-docs">Syncing Tasks...</p>';
+  }
 
   try {
     let projects = [];
@@ -290,10 +346,6 @@ async function fetchAndDisplayProjects(employeeId) {
       }
     }
 
-    // Clear existing intervals
-    Object.values(projectIntervals).forEach(clearInterval);
-    projectIntervals = {};
-
     let newlyAssigned = false;
     const currentIds = new Set(projects.map(p => p.id));
     
@@ -312,9 +364,22 @@ async function fetchAndDisplayProjects(employeeId) {
     }
 
     if (projects.length === 0) {
-      list.innerHTML = '<div class="loading-state">No active tasks assigned.</div>';
+      if (lastProjectsJson !== "[]") {
+        list.innerHTML = '<div class="loading-state">No active tasks assigned.</div>';
+        lastProjectsJson = "[]";
+      }
       return;
     }
+
+    const currentJson = JSON.stringify(projects);
+    if (currentJson === lastProjectsJson) {
+      return; // No changes, do not flicker UI
+    }
+    lastProjectsJson = currentJson;
+
+    // Clear existing intervals
+    Object.values(projectIntervals).forEach(clearInterval);
+    projectIntervals = {};
 
     list.innerHTML = '';
     projects.forEach(p => {
@@ -403,10 +468,10 @@ async function fetchAndDisplayProjects(employeeId) {
 window.markProjectDone = async (id) => {
   if (!supabaseClient) return;
   try {
-    await supabaseClient.from('projects').update({ status: 'done' }).eq('id', id);
+    await supabaseClient.from('projects').update({ status: 'in_review' }).eq('id', id);
     
     // Add notification via DB insertion or RPC if we wanted, but Supabase realtime or API from frontend is handled in HR view.
-    // For now, updating status to done is sufficient. The HR dashboard polls.
+    // For now, updating status to in_review is sufficient. The HR dashboard polls.
     
     // Simple way to trigger HR notification if we have access to notifications table
     await supabaseClient.from('notifications').insert({
@@ -415,7 +480,7 @@ window.markProjectDone = async (id) => {
       message: `Employee ${currentEmployeeName || currentEmployeeId} marked project ${id} as done.`
     });
     
-    window.showToast("Task marked as done!", "success");
+    window.showToast("Task submitted for review!", "success");
     fetchAndDisplayProjects(currentEmployeeId);
   } catch (err) {
     console.error("Error marking done", err);
@@ -592,4 +657,62 @@ window.addEventListener("DOMContentLoaded", () => {
       window.showToast("Failed to submit issue.", "error");
     }
   });
+
+  // Leave Request Logic
+  const leaveModal = document.getElementById('leave-modal');
+  const requestLeaveBtn = document.getElementById('open-leave-modal-btn');
+  const leaveCancelBtn = document.getElementById('leave-cancel-btn');
+  const leaveSubmitBtn = document.getElementById('leave-submit-btn');
+
+  if (requestLeaveBtn && leaveModal) {
+    requestLeaveBtn.addEventListener('click', () => {
+      leaveModal.classList.remove('hidden');
+    });
+
+    leaveCancelBtn.addEventListener('click', () => {
+      leaveModal.classList.add('hidden');
+      document.getElementById('leave-start').value = '';
+      document.getElementById('leave-end').value = '';
+      document.getElementById('leave-reason').value = '';
+    });
+
+    leaveSubmitBtn.addEventListener('click', async () => {
+      const start = document.getElementById('leave-start').value;
+      const end = document.getElementById('leave-end').value;
+      const reason = document.getElementById('leave-reason').value.trim();
+
+      if (!start || !end || !reason) {
+        window.showToast("Please fill in all fields.", "error");
+        return;
+      }
+
+      if (new Date(start) > new Date(end)) {
+        window.showToast("Start date must be before end date.", "error");
+        return;
+      }
+
+      try {
+        await supabaseClient.from('leave_requests').insert({
+          employee_id: currentEmployeeId,
+          employee_name: currentEmployeeName || currentEmployeeId,
+          start_date: start,
+          end_date: end,
+          reason: reason,
+          status: 'pending'
+        });
+
+        window.showToast("Leave request submitted!", "success");
+        leaveModal.classList.add('hidden');
+        document.getElementById('leave-start').value = '';
+        document.getElementById('leave-end').value = '';
+        document.getElementById('leave-reason').value = '';
+        
+        // Refresh the leave list immediately
+        fetchAndDisplayLeaves(currentEmployeeId);
+      } catch (err) {
+        console.error("Error requesting leave:", err);
+        window.showToast("Failed to submit leave request.", "error");
+      }
+    });
+  }
 });

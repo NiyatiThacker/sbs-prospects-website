@@ -67,6 +67,23 @@ export async function updateProjectStatus(projectId, status) {
   return false;
 }
 
+export async function verifyProjectSubmissions(projectName) {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase.from('projects')
+        .update({ status: 'done' })
+        .eq('name', projectName)
+        .eq('status', 'in_review');
+        
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      console.error('[Supabase] Error verifying project submissions:', err);
+    }
+  }
+  return false;
+}
+
 export async function extendDeadline(projectId, newDeadline, reason) {
   let project = null;
   

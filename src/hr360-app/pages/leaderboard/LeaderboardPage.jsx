@@ -34,7 +34,6 @@ export default function LeaderboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [department, setDepartment] = useState('');
   const [period, setPeriod] = useState('weekly');
-  const [expandedRow, setExpandedRow] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,13 +52,46 @@ export default function LeaderboardPage() {
 
   return (
     <PageContainer>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* Formula Explanation */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-10px' }}>
+          <div style={{ 
+            fontSize: '12px', 
+            color: 'var(--color-text-secondary)', 
+            background: 'var(--color-surface)', 
+            padding: '12px 16px', 
+            borderRadius: 'var(--radius-md)', 
+            border: '1px solid var(--color-border)', 
+            maxWidth: '400px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Trophy size={14} style={{ color: 'var(--color-primary)' }} />
+              How is the Leaderboard Score calculated?
+            </div>
+            <div style={{ marginBottom: '6px' }}>
+              <strong>Score</strong> = (40% × Hours) + (35% × Productivity) + (25% × Attendance)
+            </div>
+            <div style={{ fontSize: '11px', opacity: 0.8, lineHeight: 1.4 }}>
+              {data.length > 0 ? (
+                <>
+                  <em>Example ({data[0].name}):</em> (0.40 × {data[0].breakdown.hours} pts) + (0.35 × {data[0].breakdown.apps} pts) + (0.25 × {data[0].breakdown.attendance} pts) = <strong>{data[0].score}</strong> points
+                </>
+              ) : (
+                <>
+                  <em>Example:</em> If an employee gets 100% on all metrics, their score is <strong>100</strong>.
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        
         {/* Podium */}
         {top3.length === 3 && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', alignItems: 'flex-end', padding: '20px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', alignItems: 'flex-end', padding: '4px 0' }}>
             {[top3[1], top3[0], top3[2]].map((emp, i) => {
               const actualIndex = i === 0 ? 1 : i === 1 ? 0 : 2;
-              const heights = [140, 180, 120];
+              const heights = [110, 150, 90];
               return (
                 <motion.div
                   key={emp.id}
@@ -140,7 +172,7 @@ export default function LeaderboardPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
               <thead>
                 <tr>
-                  {['Rank', 'Employee', 'Department', 'Score', 'Hours', 'Trend', ''].map(h => (
+                  {['Rank', 'Employee', 'Department', 'Score', 'Hours', 'Productivity', 'Attendance', 'Trend'].map(h => (
                     <th key={h} style={{
                       padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '12px',
                       textTransform: 'uppercase', letterSpacing: '0.5px', color: '#FFFFFF',
@@ -154,9 +186,9 @@ export default function LeaderboardPage() {
                   <Fragment key={emp.id}>
                     <tr
                       key={emp.id}
-                      onClick={() => setExpandedRow(expandedRow === emp.id ? null : emp.id)}
+                      onClick={() => navigate(`/employees/${emp.id}`)}
                       style={{
-                        cursor: 'pointer', transition: 'background 0.1s',
+                        cursor: 'pointer', transition: 'background 0.2s',
                         background: emp.rank <= 3 ? `${MEDAL_COLORS[emp.rank - 1]}08` : 'transparent',
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-bg)'}
@@ -194,6 +226,22 @@ export default function LeaderboardPage() {
                         {formatHours(emp.hoursWorked)} / {formatHours(emp.hoursAllotted)}
                       </td>
                       <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '100px' }}>
+                          <ProgressBar value={emp.breakdown.apps} max={100} height={6} style={{ flex: 1, maxWidth: '60px' }} animated={false} />
+                          <span style={{ fontWeight: 600, fontSize: '13px', fontFeatureSettings: '"tnum"', color: 'var(--color-text-secondary)' }}>
+                            {emp.breakdown.apps}%
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '100px' }}>
+                          <ProgressBar value={emp.breakdown.attendance} max={100} height={6} style={{ flex: 1, maxWidth: '60px' }} animated={false} />
+                          <span style={{ fontWeight: 600, fontSize: '13px', fontFeatureSettings: '"tnum"', color: 'var(--color-text-secondary)' }}>
+                            {emp.breakdown.attendance}%
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {TREND_ICONS[emp.trend]}
                           {emp.trend !== 'same' && (
@@ -207,36 +255,7 @@ export default function LeaderboardPage() {
                           )}
                         </div>
                       </td>
-                      <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                        {expandedRow === emp.id ? '▲' : '▼'}
-                      </td>
                     </tr>
-                    {expandedRow === emp.id && (
-                      <tr key={`${emp.id}-expanded`}>
-                        <td colSpan={7} style={{ padding: '16px 24px', background: 'var(--color-bg)', borderBottom: '1px solid var(--color-border)' }}>
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            transition={{ duration: 0.2 }}
-                            style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}
-                          >
-                            {[
-                              { label: 'Hours Utilization (40%)', value: emp.breakdown.hours },
-                              { label: 'Productive App Usage (35%)', value: emp.breakdown.apps },
-                              { label: 'Attendance Consistency (25%)', value: emp.breakdown.attendance },
-                            ].map(item => (
-                              <div key={item.label} style={{ minWidth: '200px' }}>
-                                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>{item.label}</div>
-                                <ProgressBar value={item.value} max={100} height={6} showLabel animated={false} />
-                              </div>
-                            ))}
-                            <Button size="sm" variant="secondary" onClick={() => navigate(`/employees/${emp.id}`)}>
-                              View Profile →
-                            </Button>
-                          </motion.div>
-                        </td>
-                      </tr>
-                    )}
                   </Fragment>
                 ))}
               </tbody>

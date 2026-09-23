@@ -77,11 +77,14 @@ export async function getLeaderboard(filters = {}) {
         });
 
         const empPresentDays = {};
+        const empLeaveDays = {};
         attendance.forEach(a => {
           if (a.status === 'present' || a.status === 'wfh') {
             empPresentDays[a.employee_id] = (empPresentDays[a.employee_id] || 0) + 1;
           } else if (a.status === 'late') {
             empPresentDays[a.employee_id] = (empPresentDays[a.employee_id] || 0) + 0.7; // Late penalty
+          } else if (a.status === 'on_leave') {
+            empLeaveDays[a.employee_id] = (empLeaveDays[a.employee_id] || 0) + 1;
           }
         });
 
@@ -91,15 +94,20 @@ export async function getLeaderboard(filters = {}) {
           const prodMins = empProdMins[emp.id] || 0;
           const hoursWorked = Math.round((totalMins / 60) * 10) / 10;
           const presentDays = empPresentDays[emp.id] || 0;
+          const leaveDays = empLeaveDays[emp.id] || 0;
+          
+          // Exempt approved leave days from total expected work days and hours
+          const personalWorkDays = Math.max(1, daysPassedInPeriod - leaveDays);
+          const personalHoursAllotted = Math.max(1, hoursAllotted - (leaveDays * 8));
           
           // Calculate the score
           const { score, breakdown } = calculateProductivityScore({
             hoursWorked,
-            hoursAllotted: hoursAllotted,
+            hoursAllotted: personalHoursAllotted,
             productiveMinutes: prodMins,
             totalAppMinutes: totalMins,
             presentDays,
-            totalWorkDays: daysPassedInPeriod,
+            totalWorkDays: personalWorkDays,
           });
 
           return {

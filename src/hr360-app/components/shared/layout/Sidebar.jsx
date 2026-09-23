@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -16,10 +16,12 @@ import {
   ChevronLeft,
   Briefcase,
   AlertTriangle,
-  Globe
+  Globe,
+  Palmtree
 } from 'lucide-react';
 import { useMediaQuery } from '@/hr360-app/hooks/useMediaQuery';
 import { useAuth } from '@/hr360-app/context/AuthContext';
+import { getLeaveRequests } from '@/hr360-app/services/leaveService';
 
 const ICON_MAP = {
   LayoutDashboard,
@@ -33,7 +35,8 @@ const ICON_MAP = {
   MessageSquare,
   Briefcase,
   AlertTriangle,
-  Globe
+  Globe,
+  Palmtree
 };
 
 const NAV_ITEMS = [
@@ -43,6 +46,7 @@ const NAV_ITEMS = [
   { path: '/leaderboard', label: 'Leaderboard', icon: 'Trophy', roles: ['Admin', 'Employee'] },
   { path: '/projects', label: 'Projects', icon: 'Briefcase', roles: ['Admin', 'Employee'] },
   { path: '/applications', label: 'Applications', icon: 'AppWindow', roles: ['Admin', 'Employee'] },
+  { path: '/leave-requests', label: 'Leave Requests', icon: 'Palmtree', roles: ['Admin'] },
   { path: '/reports', label: 'Reports', icon: 'FileBarChart', roles: ['Admin'] },
   { path: '/issues', label: 'Reported Issues', icon: 'AlertTriangle', roles: ['Admin'] },
 ];
@@ -56,6 +60,20 @@ export default function Sidebar({ collapsed, onToggle }) {
   const location = useLocation();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const { user } = useAuth();
+  const [pendingLeavesCount, setPendingLeavesCount] = useState(0);
+
+  useEffect(() => {
+    if (user?.role === 'Admin') {
+      const fetchCount = async () => {
+        const reqs = await getLeaveRequests();
+        const pending = reqs.filter(r => r.status === 'pending');
+        setPendingLeavesCount(pending.length);
+      };
+      fetchCount();
+      const interval = setInterval(fetchCount, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -144,6 +162,7 @@ export default function Sidebar({ collapsed, onToggle }) {
               active={isActive(item.path)}
               onNavigate={isMobile ? onToggle : undefined}
               collapsed={collapsed}
+              badge={item.label === 'Leave Requests' ? pendingLeavesCount : 0}
             />
           ))}
 
@@ -204,7 +223,7 @@ export default function Sidebar({ collapsed, onToggle }) {
   );
 }
 
-function SidebarLink({ item, active, onNavigate, collapsed }) {
+function SidebarLink({ item, active, onNavigate, collapsed, badge = 0 }) {
   const Icon = ICON_MAP[item.icon];
   const [isHovered, setIsHovered] = useState(false);
 
@@ -243,15 +262,41 @@ function SidebarLink({ item, active, onNavigate, collapsed }) {
       >
         {Icon && <Icon size={20} style={{ flexShrink: 0 }} />}
         
+        {badge > 0 && collapsed && (
+          <div style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            width: '10px',
+            height: '10px',
+            background: 'var(--color-danger)',
+            borderRadius: '50%',
+            border: '2px solid white'
+          }} />
+        )}
+
         <AnimatePresence>
           {!collapsed && (
             <motion.span
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: 'auto' }}
               exit={{ opacity: 0, width: 0 }}
-              style={{ whiteSpace: 'nowrap', fontWeight: 600, fontSize: '13px' }}
+              style={{ whiteSpace: 'nowrap', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', flex: 1 }}
             >
-              {item.label}
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {badge > 0 && (
+                <span style={{
+                  background: 'var(--color-danger)',
+                  color: 'white',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  lineHeight: 1
+                }}>
+                  {badge}
+                </span>
+              )}
             </motion.span>
           )}
         </AnimatePresence>

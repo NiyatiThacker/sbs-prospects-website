@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getProjects, assignProject, extendDeadline, updateProjectStatus } from '@/hr360-app/services/projectsService';
+import { getProjects, assignProject, extendDeadline, updateProjectStatus, verifyProjectSubmissions } from '@/hr360-app/services/projectsService';
 import { notifyProjectDeadlineMissed } from '@/hr360-app/services/notificationsService';
 import AssignProjectModal from './components/AssignProjectModal';
 import EditDeadlineModal from './components/EditDeadlineModal';
@@ -53,6 +53,12 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleVerify = async (projectName) => {
+    await verifyProjectSubmissions(projectName);
+    toast.success('Project submissions verified and marked as done!');
+    fetchProjects();
+  };
+
   const groupedProjects = {};
   projects.forEach(p => {
     if (!groupedProjects[p.name]) {
@@ -75,6 +81,8 @@ export default function ProjectsPage() {
         derivedStatus = 'done';
       } else if (group.some(g => g.status === 'failed')) {
         derivedStatus = 'failed';
+      } else if (group.some(g => g.status === 'in_review')) {
+        derivedStatus = 'in_review';
       } else {
         derivedStatus = 'active';
       }
@@ -143,10 +151,10 @@ export default function ProjectsPage() {
                 <td style={{ padding: '16px' }}>
                   <span style={{
                     padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 500,
-                    backgroundColor: p.status === 'done' ? 'rgba(22, 163, 74, 0.1)' : (p.status === 'failed' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)'),
-                    color: p.status === 'done' ? '#16A34A' : (p.status === 'failed' ? '#EF4444' : '#3B82F6')
+                    backgroundColor: p.status === 'done' ? 'rgba(22, 163, 74, 0.1)' : (p.status === 'failed' ? 'rgba(239, 68, 68, 0.1)' : (p.status === 'in_review' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(59, 130, 246, 0.1)')),
+                    color: p.status === 'done' ? '#16A34A' : (p.status === 'failed' ? '#EF4444' : (p.status === 'in_review' ? '#F59E0B' : '#3B82F6'))
                   }}>
-                    {p.status.toUpperCase()}
+                    {p.status === 'in_review' ? 'IN REVIEW' : p.status.toUpperCase()}
                   </span>
                   {p.isTeam && p.status !== 'failed' && (
                      <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', marginTop: '6px', fontWeight: 500 }}>
@@ -160,6 +168,18 @@ export default function ProjectsPage() {
                   )}
                 </td>
                 <td style={{ padding: '16px', textAlign: 'right' }}>
+                  {p.status === 'in_review' && (
+                    <button 
+                      onClick={() => handleVerify(p.name)}
+                      style={{
+                        background: 'none', border: 'none', color: 'var(--color-success)',
+                        cursor: 'pointer', padding: '4px', marginRight: '8px'
+                      }}
+                      title="Verify & Approve"
+                    >
+                      <CheckCircle size={16} />
+                    </button>
+                  )}
                   <button 
                     onClick={() => setEditingProject(p)}
                     style={{
