@@ -14,12 +14,13 @@ import { SkeletonDashboard } from '@/hr360-app/components/shared/ui/Skeleton';
 import { formatHours, formatDuration, formatTimeAgo } from '@/hr360-app/utils/formatters';
 import { getScoreLabel, getScoreStatus } from '@/hr360-app/utils/productivityScore';
 import { APP_CATEGORY_COLORS } from '@/hr360-app/utils/constants';
-import { getEmployeeById, uploadEmployeeDocument } from '@/hr360-app/services/employeeService';
+import { getEmployeeById, uploadEmployeeDocument, updateEmployee } from '@/hr360-app/services/employeeService';
 import { getProjects } from '@/hr360-app/services/projectsService';
 import { getNotifications, markAsRead } from '@/hr360-app/services/notificationsService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ChartTooltip from '@/hr360-app/components/shared/charts/ChartTooltip';
 import { AXIS_STYLE, GRID_STYLE, CHART_COLORS } from '@/hr360-app/components/shared/charts/chartTheme';
+import toast from 'react-hot-toast';
 
 const HISTORY_COLUMNS = [
   {
@@ -84,6 +85,24 @@ export default function EmployeeDetailPage() {
   const [docTitleInput, setDocTitleInput] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadMessage, setUploadMessage] = useState('');
+
+  const [isEditingShift, setIsEditingShift] = useState(false);
+  const [shiftStartInput, setShiftStartInput] = useState('');
+  const [isSavingShift, setIsSavingShift] = useState(false);
+
+  const handleSaveShift = async () => {
+    setIsSavingShift(true);
+    try {
+      await updateEmployee(employee.id, { expected_shift_start: shiftStartInput + ':00' });
+      setEmployee(prev => ({ ...prev, expected_shift_start: shiftStartInput + ':00' }));
+      setIsEditingShift(false);
+      toast.success('Shift start time updated successfully');
+    } catch (e) {
+      toast.error('Failed to update shift start time');
+    } finally {
+      setIsSavingShift(false);
+    }
+  };
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
@@ -185,6 +204,7 @@ All attendance tracking, productivity utilization ratios, salary computations, a
         
         if (!cancelled) {
           setEmployee(data);
+          setShiftStartInput(data.expected_shift_start ? data.expected_shift_start.substring(0, 5) : '09:00');
           setEmployeeProjects(projectsData || []);
           
           if (data) {
@@ -250,8 +270,32 @@ All attendance tracking, productivity utilization ratios, salary computations, a
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '14px', marginTop: '2px' }}>
                 {employee.role} · {employee.department}
               </p>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
                 <StatusBadge status={employee.status} />
+                <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
+                  Expected Shift Start:
+                </span>
+                {isEditingShift ? (
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <input 
+                      type="time" 
+                      value={shiftStartInput} 
+                      onChange={e => setShiftStartInput(e.target.value)} 
+                      style={{ padding: '2px 6px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                    />
+                    <Button size="sm" onClick={handleSaveShift} disabled={isSavingShift} style={{ padding: '2px 8px', height: '24px' }}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setIsEditingShift(false)} style={{ padding: '2px 8px', height: '24px' }}>Cancel</Button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 500 }}>
+                      {employee.expected_shift_start ? employee.expected_shift_start.substring(0, 5) : '09:00'}
+                    </span>
+                    <button onClick={() => setIsEditingShift(true)} style={{ background: 'none', border: 'none', color: 'var(--color-brand)', cursor: 'pointer', fontSize: '12px' }}>
+                      Edit
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -375,8 +419,8 @@ All attendance tracking, productivity utilization ratios, salary computations, a
 
         {activeTab === 'apps' && (
           <Card>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Top Applications</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>All Tracked Applications</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
               {employee.topApps.map(app => (
                 <div key={app.app} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{ width: '100px', fontSize: '13px', fontWeight: 500 }}>{app.app}</span>

@@ -1,0 +1,201 @@
+## Objective
+
+Update only the **Admin Dashboard** controls for employee shift/check-in schedules.
+
+### Important Existing Behavior — DO NOT CHANGE
+
+The employee-side Agent behavior must remain exactly as it is.
+
+When an employee opens/starts the Agent:
+
+1. The system identifies the employee using their registered employee/user ID.
+2. The employee is automatically marked as checked in.
+3. The actual check-in timestamp is recorded in the existing check-in/activity log.
+4. Activity tracking continues normally.
+
+**Do NOT add a new employee-side check-in button or change the Agent startup flow.**
+
+---
+
+## New Admin Control
+
+Admin should be able to configure the **expected shift start time** for each employee.
+
+Example:
+
+```text
+Employee A → Expected start: 09:00 AM
+Employee B → Expected start: 11:00 AM
+Employee C → Expected start: 10:30 AM
+```
+
+The Admin Dashboard should allow Admin to:
+
+* View an employee's current expected shift start time.
+* Edit the expected shift start time.
+* Save the change.
+* See the updated time in the employee record.
+
+The existing default shift/check-in time can remain as the fallback for employees without a custom schedule.
+
+---
+
+## Late Check-in Logic
+
+When the Agent is opened and the employee is automatically checked in:
+
+```text
+Actual Check-in Time = Agent startup/check-in timestamp
+Expected Check-in Time = Employee's configured shift start time
+```
+
+Then determine status:
+
+```text
+Actual Check-in <= Expected Start
+→ On Time
+
+Actual Check-in > Expected Start
+→ Late
+```
+
+Example:
+
+```text
+Expected: 09:00 AM
+Actual:   08:57 AM
+Status:   On Time
+
+Expected: 09:00 AM
+Actual:   09:07 AM
+Status:   Late
+```
+
+The actual check-in timestamp must remain the real timestamp. Do not replace it with the scheduled time.
+
+---
+
+## Employee ID Synchronization
+
+The check-in record must remain associated with the employee's registered ID.
+
+When the Agent starts:
+
+```text
+Employee ID
+      ↓
+Identify employee
+      ↓
+Fetch employee's configured shift
+      ↓
+Record actual check-in timestamp
+      ↓
+Compare actual vs expected shift start
+      ↓
+Set attendance/check-in status
+```
+
+This must work independently for every employee.
+
+---
+
+## Admin Changes
+
+If Admin changes:
+
+```text
+Employee A
+09:00 AM → 11:00 AM
+```
+
+future check-ins for Employee A should use **11:00 AM** as the expected start time.
+
+Do not modify historical check-in records.
+
+For example:
+
+```text
+Yesterday
+Expected: 09:00
+Actual: 09:15
+Status: Late
+
+Today Admin changes shift to 11:00
+
+Today
+Expected: 11:00
+Actual: 11:05
+Status: Late
+```
+
+Yesterday's record must remain unchanged.
+
+---
+
+## Important Separation
+
+Keep these as separate values:
+
+**Expected Shift Start**
+→ Admin-configured schedule.
+
+**Actual Check-in**
+→ Automatically generated when the employee opens the Agent.
+
+**Check-in Status**
+→ Derived by comparing the two.
+
+Do not merge these values.
+
+---
+
+## Safe Implementation Requirements
+
+Before changing code:
+
+1. Inspect the existing employee/user schema.
+2. Inspect the existing Agent startup/check-in flow.
+3. Inspect the existing check-in/activity log structure.
+4. Identify how employee IDs are currently associated with check-in records.
+5. Identify where the current default check-in time is defined.
+6. Make the minimum required backend/database changes.
+7. Add only the required Admin UI controls.
+8. Do NOT modify the employee Agent UI/flow.
+9. Do NOT modify activity classification.
+10. Do NOT modify leaderboard calculations yet.
+11. Do NOT alter historical check-in records.
+
+### Test Cases
+
+Test at minimum:
+
+```text
+Employee A
+Expected: 09:00
+Agent opened: 08:55
+→ On Time
+
+Employee A
+Expected: 09:00
+Agent opened: 09:00
+→ On Time
+
+Employee A
+Expected: 09:00
+Agent opened: 09:05
+→ Late
+
+Employee B
+Expected: 11:00
+Agent opened: 11:03
+→ Late
+
+Employee A and B have different schedules
+→ Each is evaluated against their own expected start time.
+
+Admin changes Employee A's schedule
+→ Future check-ins use the new schedule.
+→ Historical records remain unchanged.
+```
+
+Before implementing, inspect the existing architecture and identify exactly which files/tables/functions need modification. Do not rewrite unrelated logic.

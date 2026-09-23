@@ -29,10 +29,10 @@ export function calculateProductivityScore({
   presentDays = 0,
   totalWorkDays = 1,
 }) {
-  // Each sub-score is clamped to 0–100
-  const hoursScore = Math.min(100, (hoursWorked / hoursAllotted) * 100);
-  const appsScore = Math.min(100, (productiveMinutes / totalAppMinutes) * 100);
-  const attendanceScore = Math.min(100, (presentDays / totalWorkDays) * 100);
+  // Each sub-score is clamped to 0–100. Handle 0 denominators to avoid NaN/Infinity.
+  const hoursScore = hoursAllotted > 0 ? Math.min(100, (hoursWorked / hoursAllotted) * 100) : 0;
+  const appsScore = totalAppMinutes > 0 ? Math.min(100, (productiveMinutes / totalAppMinutes) * 100) : 0;
+  const attendanceScore = totalWorkDays > 0 ? Math.min(100, (presentDays / totalWorkDays) * 100) : 0;
 
   const composite =
     hoursScore * SCORE_WEIGHTS.HOURS_UTILIZATION +

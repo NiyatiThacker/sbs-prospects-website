@@ -164,9 +164,40 @@ export default function SettingsPage() {
                           style={{ ...inputStyle, width: '80px' }}
                           min={1} max={24}
                         />
-                        <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>hrs</span>
+                        <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginRight: '8px' }}>hrs</span>
+                        <button
+                          onClick={() => {
+                            const updated = settings.allottedHours.overrides.filter((_, idx) => idx !== i);
+                            setSettings({ ...settings, allottedHours: { ...settings.allottedHours, overrides: updated } });
+                          }}
+                          style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        >
+                          <Trash size={16} />
+                        </button>
                       </div>
                     ))}
+                    {settings.allottedHours.overrides.length < DEPARTMENTS.length && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          // Find a department not currently in the overrides list
+                          const usedDepts = settings.allottedHours.overrides.map(o => o.department);
+                          const availableDept = DEPARTMENTS.find(d => !usedDepts.includes(d)) || DEPARTMENTS[0];
+                          
+                          setSettings({
+                            ...settings,
+                            allottedHours: {
+                              ...settings.allottedHours,
+                              overrides: [...settings.allottedHours.overrides, { department: availableDept, hours: 8 }]
+                            }
+                          });
+                        }}
+                        style={{ alignSelf: 'flex-start', marginTop: '4px' }}
+                      >
+                        + Add Department
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -178,7 +209,7 @@ export default function SettingsPage() {
               <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>App Category Mapping</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {settings.appCategories.map((item, i) => (
-                  <div key={item.app} style={{
+                  <div key={item.app + '-' + i} style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     padding: '8px 12px', borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-border)',
@@ -213,7 +244,7 @@ export default function SettingsPage() {
               <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>Alert Thresholds</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <label style={labelStyle}>Low Utilization Warning (%)</label>
+                  <label style={labelStyle}>Low Productivity Warning Threshold (%)</label>
                   <input
                     type="number"
                     value={settings.alertThresholds.lowUtilization}
@@ -226,7 +257,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Critical Utilization Alert (%)</label>
+                  <label style={labelStyle}>Critical Productivity Alert Threshold (%)</label>
                   <input
                     type="number"
                     value={settings.alertThresholds.criticalUtilization}
@@ -239,7 +270,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Consecutive Days Before Alert</label>
+                  <label style={labelStyle}>Consecutive Days of Low Productivity Before Alert</label>
                   <input
                     type="number"
                     value={settings.alertThresholds.consecutiveDays}

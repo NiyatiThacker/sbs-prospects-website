@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getEmployees } from '@/hr360-app/services/employeeService';
+import { X } from 'lucide-react';
 
 export default function AssignProjectModal({ isOpen, onClose, onAssign }) {
   const [employees, setEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -29,26 +30,37 @@ export default function AssignProjectModal({ isOpen, onClose, onAssign }) {
   
   if (!isOpen) return null;
   
+  const toggleEmployee = (emp) => {
+    const isSelected = selectedEmployees.find(e => e.id === emp.id);
+    if (isSelected) {
+      setSelectedEmployees(selectedEmployees.filter(e => e.id !== emp.id));
+    } else {
+      setSelectedEmployees([...selectedEmployees, emp]);
+    }
+    setSearchQuery('');
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedEmployee || !name || !deadline) return;
+    if (selectedEmployees.length === 0 || !name || !deadline) return;
     
-    const emp = employees.find(e => e.id === selectedEmployee);
     onAssign({
-      employeeId: selectedEmployee,
-      employeeName: emp ? emp.name : 'Unknown Employee',
+      selectedEmployees,
       name,
       description,
       deadline: new Date(deadline).toISOString()
     });
     
-    setSelectedEmployee('');
+    setSelectedEmployees([]);
     setSearchQuery('');
     setName('');
     setDescription('');
     setDeadline('');
     onClose();
   };
+
+  const unselectedEmployees = employees.filter(emp => !selectedEmployees.find(se => se.id === emp.id));
+  const filteredEmployees = unselectedEmployees.filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div style={{
@@ -60,18 +72,38 @@ export default function AssignProjectModal({ isOpen, onClose, onAssign }) {
         backgroundColor: 'var(--color-bg)', padding: '24px', borderRadius: '12px',
         width: '100%', maxWidth: '500px', border: '1px solid var(--color-border)'
       }}>
-        <h2 style={{ marginTop: 0, color: 'var(--color-text)' }}>Assign New Project/Task</h2>
+        <h2 style={{ marginTop: 0, color: 'var(--color-text)' }}>Assign Team Project/Task</h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div ref={dropdownRef} style={{ position: 'relative' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-secondary)' }}>Employee</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-secondary)' }}>Assign To (Multiple)</label>
+            
+            {/* Selected Employee Chips */}
+            {selectedEmployees.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                {selectedEmployees.map(emp => (
+                  <div key={emp.id} style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    backgroundColor: 'var(--color-brand)', color: 'white',
+                    padding: '4px 8px', borderRadius: '16px', fontSize: '12px'
+                  }}>
+                    {emp.name}
+                    <X 
+                      size={14} 
+                      style={{ cursor: 'pointer' }} 
+                      onClick={() => toggleEmployee(emp)} 
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             <input 
               type="text"
-              placeholder="Search employee..."
+              placeholder="Search and add employees..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setIsDropdownOpen(true);
-                if (selectedEmployee) setSelectedEmployee(''); // clear selection if typing
               }}
               onFocus={() => setIsDropdownOpen(true)}
               style={{
@@ -88,29 +120,25 @@ export default function AssignProjectModal({ isOpen, onClose, onAssign }) {
                 marginTop: '4px', zIndex: 10, padding: 0, listStyle: 'none',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}>
-                {employees.filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase())).map(emp => (
+                {filteredEmployees.map(emp => (
                   <li 
                     key={emp.id}
                     onClick={() => {
-                      setSelectedEmployee(emp.id);
-                      setSearchQuery(`${emp.name} (${emp.department})`);
-                      setIsDropdownOpen(false);
+                      toggleEmployee(emp);
                     }}
                     style={{
                       padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--color-border)',
-                      backgroundColor: selectedEmployee === emp.id ? 'var(--color-bg-alt)' : 'transparent',
+                      backgroundColor: 'transparent',
                       color: 'var(--color-text)'
                     }}
                     onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--color-bg-alt)'}
-                    onMouseLeave={(e) => {
-                      if (selectedEmployee !== emp.id) e.target.style.backgroundColor = 'transparent';
-                    }}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                   >
                     {emp.name} <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>({emp.department})</span>
                   </li>
                 ))}
-                {employees.filter(emp => emp.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                  <li style={{ padding: '10px 12px', color: 'var(--color-text-secondary)' }}>No employees found</li>
+                {filteredEmployees.length === 0 && (
+                  <li style={{ padding: '10px 12px', color: 'var(--color-text-secondary)' }}>No other employees found</li>
                 )}
               </ul>
             )}
@@ -169,9 +197,11 @@ export default function AssignProjectModal({ isOpen, onClose, onAssign }) {
             </button>
             <button 
               type="submit"
+              disabled={selectedEmployees.length === 0}
               style={{
                 padding: '10px 16px', borderRadius: '6px', border: 'none',
-                backgroundColor: 'var(--color-brand)', color: 'white', cursor: 'pointer'
+                backgroundColor: selectedEmployees.length > 0 ? 'var(--color-brand)' : 'var(--color-border)', 
+                color: 'white', cursor: selectedEmployees.length > 0 ? 'pointer' : 'not-allowed'
               }}
             >
               Assign Project

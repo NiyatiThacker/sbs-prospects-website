@@ -106,8 +106,22 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updatePassword = useCallback(async (newPassword) => {
+    setIsLoading(true);
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      setIsLoading(false);
+      if (error) {
+        return { success: false, message: error.message };
+      }
+      return { success: true };
+    }
+    setIsLoading(false);
+    return { success: false, message: 'Supabase is not configured.' };
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, isInitializing, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, isLoading, isInitializing, login, logout, updatePassword, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

@@ -32,7 +32,7 @@ export default function EmployeeDirectoryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [editingEmployee, setEditingEmployee] = useState(null);
-  const [editForm, setEditForm] = useState({ role: '', department: '' });
+  const [editForm, setEditForm] = useState({ role: '', department: '', expected_shift_start: '' });
   const [deletingEmployee, setDeletingEmployee] = useState(null);
 
   const handleCreateEmployee = async (e) => {
@@ -161,7 +161,7 @@ export default function EmployeeDirectoryPage() {
       align: 'right',
       render: (val, row) => (
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button onClick={(e) => { e.stopPropagation(); setEditingEmployee(row); setEditForm({ role: row.role, department: row.department }); }} style={actionBtnStyle} title="Edit Role/Department">
+          <button onClick={(e) => { e.stopPropagation(); setEditingEmployee(row); setEditForm({ role: row.role, department: row.department, expected_shift_start: row.expected_shift_start || '09:00:00' }); }} style={actionBtnStyle} title="Edit Employee">
             <Edit size={16} />
           </button>
           <button onClick={(e) => { e.stopPropagation(); setDeletingEmployee(row); }} style={{...actionBtnStyle, color: 'var(--color-danger)'}} title="Delete Employee">
@@ -348,6 +348,10 @@ export default function EmployeeDirectoryPage() {
                   <option value="Employee">Employee</option>
                   <option value="Admin">Admin</option>
                 </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>Expected Shift Start</label>
+                <input required type="time" value={editForm.expected_shift_start ? editForm.expected_shift_start.substring(0, 5) : '09:00'} onChange={e => setEditForm({...editForm, expected_shift_start: e.target.value + ':00'})} style={inputStyle} />
               </div>
               <Button type="submit" disabled={isSubmitting} fullWidth style={{ marginTop: '8px' }}>
                 {isSubmitting ? 'Saving...' : 'Save Changes'}

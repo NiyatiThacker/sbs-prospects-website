@@ -16,6 +16,7 @@ const NotificationsPage = lazy(() => import('@/hr360-app/pages/notifications/Not
 const ProjectsPage = lazy(() => import('@/hr360-app/pages/projects/ProjectsPage'));
 const IssuesPage = lazy(() => import('@/hr360-app/pages/issues/IssuesPage'));
 const LoginPage = lazy(() => import('@/hr360-app/pages/auth/LoginPage'));
+const UpdatePasswordPage = lazy(() => import('@/hr360-app/pages/auth/UpdatePasswordPage'));
 
 /**
  * Page loading fallback — lightweight skeleton, not a spinner.
@@ -64,6 +65,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: withSuspense(LoginPage),
+  },
+  {
+    path: '/update-password',
+    element: withSuspense(UpdatePasswordPage),
   },
   {
     path: '/',

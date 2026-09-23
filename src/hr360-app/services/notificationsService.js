@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getEmployees } from './employeeService';
+import { getSettings } from './settingsService';
 import toast from 'react-hot-toast';
 
 export async function getNotifications() {
@@ -118,13 +119,26 @@ export async function generateSystemAlerts() {
       );
     }
 
-    // Alert 3: Low Utilization
-    const lowUtilization = employees.filter(e => e.score < 50 && e.hoursWorked > 0);
+    const settings = await getSettings();
+    const thresholds = settings?.alertThresholds || { lowUtilization: 70, criticalUtilization: 60 };
+
+    // Alert 3: Low Productivity Warning
+    const lowUtilization = employees.filter(e => e.score >= thresholds.criticalUtilization && e.score < thresholds.lowUtilization && e.hoursWorked > 0);
     if (lowUtilization.length > 0) {
       await createNotification(
         'warning',
-        'Low Utilization Alert',
-        `${lowUtilization.length} employees have logged active time but are currently below 50% productivity score.`
+        'Low Productivity Warning',
+        `${lowUtilization.length} employees have logged active time but are below your ${thresholds.lowUtilization}% productivity warning threshold.`
+      );
+    }
+
+    // Alert 4: Critical Productivity Alert
+    const criticalUtilization = employees.filter(e => e.score < thresholds.criticalUtilization && e.hoursWorked > 0);
+    if (criticalUtilization.length > 0) {
+      await createNotification(
+        'danger',
+        'Critical Productivity Alert',
+        `${criticalUtilization.length} employees have dropped below your critical ${thresholds.criticalUtilization}% productivity threshold.`
       );
     }
     

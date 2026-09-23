@@ -43,10 +43,23 @@ export async function getSettings() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const appCategories = data.map(item => ({
-          app: item.display_name,
-          category: item.category,
-        }));
+        const uniqueMap = {};
+        
+        // Regex to catch transient window titles (e.g., "0% Complete", "100% Complete")
+        const garbageRegex = /^\d+%\s*Complete$/i;
+
+        data.forEach(item => {
+          const name = item.display_name?.trim();
+          if (name && !garbageRegex.test(name) && !uniqueMap[name]) {
+            uniqueMap[name] = item.category || 'neutral';
+          }
+        });
+        
+        const appCategories = Object.entries(uniqueMap)
+          .map(([app, category]) => ({ app, category }))
+          .sort((a, b) => a.app.localeCompare(b.app));
+        settingsState.appCategories = appCategories;
+
         return {
           ...settingsState,
           appCategories,

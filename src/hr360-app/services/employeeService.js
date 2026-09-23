@@ -2,6 +2,7 @@
  * Employee data service.
  */
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { calculateProductivityScore } from '../utils/productivityScore';
 
 export async function getEmployees(filters = {}) {
   if (isSupabaseConfigured) {
@@ -34,15 +35,35 @@ export async function getEmployees(filters = {}) {
         // Fetch hours worked strictly within this week's date boundary
         const { data: summaries, error: sumError } = await supabase
           .from('screentime_daily_summary')
-          .select('employee_id, total_minutes')
+          .select('employee_id, category, total_minutes')
           .gte('date', startOfWeekStr)
           .lte('date', todayStr);
         
         if (sumError) throw sumError;
 
-        const hoursByEmployee = {};
+        // Fetch attendance strictly for this week
+        const { data: attendance, error: attErr } = await supabase
+          .from('attendance_records')
+          .select('employee_id, status')
+          .gte('date', startOfWeekStr)
+          .lte('date', todayStr);
+
+        const empTotalMins = {};
+        const empProdMins = {};
         summaries?.forEach(s => {
-          hoursByEmployee[s.employee_id] = (hoursByEmployee[s.employee_id] || 0) + s.total_minutes;
+          empTotalMins[s.employee_id] = (empTotalMins[s.employee_id] || 0) + s.total_minutes;
+          if (s.category === 'productive') {
+            empProdMins[s.employee_id] = (empProdMins[s.employee_id] || 0) + s.total_minutes;
+          }
+        });
+
+        const empPresentDays = {};
+        attendance?.forEach(a => {
+          if (a.status === 'present' || a.status === 'wfh') {
+            empPresentDays[a.employee_id] = (empPresentDays[a.employee_id] || 0) + 1;
+          } else if (a.status === 'late') {
+            empPresentDays[a.employee_id] = (empPresentDays[a.employee_id] || 0) + 0.7; // Late penalty
+          }
         });
 
         // Fetch latest ping from raw logs to determine active status (last 30 seconds)
@@ -54,9 +75,22 @@ export async function getEmployees(filters = {}) {
         const activeEmployees = new Set(latestLogs?.map(l => l.employee_id) || []);
 
         const results = employees.map(emp => {
-          const totalMins = hoursByEmployee[emp.id] || 0;
+          const totalMins = empTotalMins[emp.id] || 0;
+          const prodMins = empProdMins[emp.id] || 0;
           const hoursWorked = Math.round((totalMins / 60) * 10) / 10;
-          const score = hoursWorked > 0 ? Math.min(100, Math.round((60 + (hoursWorked / 40) * 35) * 10) / 10) : 0;
+          const presentDays = empPresentDays[emp.id] || 0;
+          
+          const daysPassedThisWeek = Math.max(1, Math.floor((now.getTime() - monThisWeek.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+          const { score } = calculateProductivityScore({
+            hoursWorked,
+            hoursAllotted: 40,
+            productiveMinutes: prodMins,
+            totalAppMinutes: totalMins,
+            presentDays,
+            totalWorkDays: daysPassedThisWeek,
+          });
+
           return {
             ...emp,
             status: activeEmployees.has(emp.id) ? 'active' : 'inactive',
@@ -115,14 +149,31 @@ export async function getEmployeeById(id) {
           appMins[s.app_name] = (appMins[s.app_name] || 0) + s.total_minutes;
           appCategories[s.app_name] = s.category;
         });
-        const topApps = Object.entries(appMins)
+        const topAppsRaw = Object.entries(appMins)
           .map(([app, minutes]) => ({
             app,
             minutes,
-            category: appCategories[app],
+            category: appCategories[app] || 'neutral',
           }))
-          .sort((a, b) => b.minutes - a.minutes)
-          .slice(0, 5);
+          .sort((a, b) => b.minutes - a.minutes);
+          
+        const topApps = [];
+        let otherMinutes = 0;
+        
+        const totalAllTimeMins = topAppsRaw.reduce((sum, item) => sum + item.minutes, 0);
+        const threshold = Math.max(15, totalAllTimeMins * 0.015); // 1.5% or 15 mins minimum
+        
+        topAppsRaw.forEach(item => {
+          if (item.minutes < threshold) {
+            otherMinutes += item.minutes;
+          } else {
+            topApps.push(item);
+          }
+        });
+        
+        if (otherMinutes > 0) {
+          topApps.push({ app: 'Other / Background Apps', minutes: Math.round(otherMinutes), category: 'neutral' });
+        }
 
         // Weekly hours (current calendar week Monday to Saturday with automatic weekly refresh)
         const now = new Date();
@@ -232,17 +283,29 @@ export async function getEmployeeById(id) {
           total: monthlyRecords.length,
         };
 
-        // Calculate actual Score Breakdown metrics without altering the master score
-        const hoursScore = Math.min(100, Math.round((hoursWorked / 40) * 100)) || 0;
-        const prodSumMins = summaries?.filter(s => s.category === 'productive').reduce((sum, s) => sum + s.total_minutes, 0) || 0;
-        const appsScore = totalMins > 0 ? Math.round((prodSumMins / totalMins) * 100) : (hoursWorked > 0 ? 85 : 0);
-        const attScore = attSummary.total > 0 ? Math.min(100, Math.round(((attSummary.present + attSummary.wfh + attSummary.late * 0.7) / attSummary.total) * 100)) : (hoursWorked > 0 ? 95 : 0);
+        // Calculate actual Score Breakdown metrics using unified logic
+        const daysPassedThisWeek = Math.max(1, Math.floor((now.getTime() - monThisWeek.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+        
+        // Find current week's present days for this employee based on history
+        let presentDaysThisWeek = 0;
+        history.forEach(h => {
+          const d = new Date(h.date);
+          if (d >= monThisWeek && d <= now) {
+            if (h.status === 'present' || h.status === 'wfh') presentDaysThisWeek += 1;
+            else if (h.status === 'late') presentDaysThisWeek += 0.7;
+          }
+        });
 
-        const breakdown = {
-          hours: hoursWorked > 0 ? Math.max(40, hoursScore) : 0,
-          apps: hoursWorked > 0 ? Math.max(60, appsScore) : 0,
-          attendance: hoursWorked > 0 ? Math.max(70, attScore) : 0,
-        };
+        const prodSumMins = summaries?.filter(s => s.category === 'productive' && s.date >= startOfWeekStr && s.date <= todayStr).reduce((sum, s) => sum + s.total_minutes, 0) || 0;
+        
+        const { score, breakdown } = calculateProductivityScore({
+          hoursWorked,
+          hoursAllotted: 40,
+          productiveMinutes: prodSumMins,
+          totalAppMinutes: totalMins,
+          presentDays: presentDaysThisWeek,
+          totalWorkDays: daysPassedThisWeek
+        });
 
         // Check if currently active (ping in last 30 seconds)
         const { data: latestLog } = await supabase
@@ -254,8 +317,6 @@ export async function getEmployeeById(id) {
           
         const isActive = latestLog && latestLog.length > 0;
         
-        // Exact same master score calculation as getEmployees table view!
-        const score = hoursWorked > 0 ? Math.min(100, Math.round((60 + (hoursWorked / 40) * 35) * 10) / 10) : 0;
 
         // Calculate Daily Application Usage from actual logs (today's activity, or latest recorded active day if none today)
         const todaySummaries = summaries?.filter(s => s.date === todayStr) || [];
@@ -274,15 +335,36 @@ export async function getEmployeeById(id) {
         });
 
         const dailyTotalMins = Object.values(dailyAppMins).reduce((a, b) => a + b, 0) || 1;
-        const dailyApps = Object.entries(dailyAppMins)
+        const dailyAppsRaw = Object.entries(dailyAppMins)
           .map(([app, minutes]) => ({
             app,
             minutes,
-            category: dailyAppCats[app],
+            category: dailyAppCats[app] || 'neutral',
             percentage: Math.round((minutes / dailyTotalMins) * 100) || 0,
           }))
-          .sort((a, b) => b.minutes - a.minutes)
-          .slice(0, 4);
+          .sort((a, b) => b.minutes - a.minutes);
+          
+        const dailyApps = [];
+        let dailyOtherMins = 0;
+        let dailyOtherPct = 0;
+        
+        dailyAppsRaw.forEach(item => {
+          if (item.minutes < 5) {
+            dailyOtherMins += item.minutes;
+            dailyOtherPct += item.percentage;
+          } else {
+            dailyApps.push(item);
+          }
+        });
+        
+        if (dailyOtherMins > 0) {
+          dailyApps.push({ 
+            app: 'Other / Background Apps', 
+            minutes: Math.round(dailyOtherMins), 
+            category: 'neutral',
+            percentage: dailyOtherPct
+          });
+        }
 
         let dbDocuments = [];
         try {

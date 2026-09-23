@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
     let cancelled = false;
     async function load() {
       setIsLoading(true);
-      const result = await getLeaderboard({ department: department || undefined });
+      const result = await getLeaderboard({ department: department || undefined, period });
       if (!cancelled) { setData(result); setIsLoading(false); }
     }
     load();
@@ -108,7 +108,7 @@ export default function LeaderboardPage() {
         {/* Filters */}
         <Card padding="12px 16px">
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {['weekly', 'monthly', 'quarterly'].map(p => (
+            {['daily', 'weekly', 'monthly', 'quarterly'].map(p => (
               <Button
                 key={p}
                 size="sm"

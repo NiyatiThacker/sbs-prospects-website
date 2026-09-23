@@ -266,6 +266,27 @@ async function fetchAndDisplayProjects(employeeId) {
 
       if (!error && data) {
         projects = data;
+
+        // Fetch team data for these projects
+        if (projects.length > 0) {
+          const names = projects.map(p => p.name);
+          const { data: related } = await supabaseClient
+            .from('projects')
+            .select('name, employee_name')
+            .in('name', names);
+            
+          if (related) {
+            projects = projects.map(p => {
+              const matches = related.filter(r => r.name === p.name);
+              const teamNames = matches.map(m => m.employee_name);
+              return {
+                ...p,
+                isTeam: matches.length > 1,
+                teamNamesStr: matches.length > 1 ? teamNames.join(', ') : ''
+              };
+            });
+          }
+        }
       }
     }
 
@@ -307,6 +328,10 @@ async function fetchAndDisplayProjects(employeeId) {
           <div>
             <h4 class="card-title">${p.name}</h4>
             <div class="card-subtitle">${p.description || 'No description'}</div>
+            ${p.isTeam ? `<div style="font-size: 11px; margin-top: 6px; color: var(--color-primary); display: flex; align-items: center; gap: 4px; font-weight: 500;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Team: ${p.teamNamesStr}
+            </div>` : ''}
           </div>
           <span class="status-tag ${statusClass}">
             ${p.status.toUpperCase()}
@@ -379,6 +404,7 @@ window.markProjectDone = async (id) => {
   if (!supabaseClient) return;
   try {
     await supabaseClient.from('projects').update({ status: 'done' }).eq('id', id);
+    
     // Add notification via DB insertion or RPC if we wanted, but Supabase realtime or API from frontend is handled in HR view.
     // For now, updating status to done is sufficient. The HR dashboard polls.
     
