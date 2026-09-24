@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('hours');
+  const [searchCategory, setSearchCategory] = useState('');
   
   const [admins, setAdmins] = useState([]);
   const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
@@ -94,29 +95,29 @@ export default function SettingsPage() {
 
   return (
     <PageContainer>
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
         {/* Settings nav */}
-        <Card padding="8px">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {sections.map(s => (
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  padding: '10px 14px', borderRadius: 'var(--radius-sm)',
-                  background: activeSection === s.id ? 'var(--color-brand-soft)' : 'transparent',
-                  color: activeSection === s.id ? 'var(--color-brand)' : 'var(--color-text-secondary)',
-                  border: 'none', cursor: 'pointer', fontFamily: 'var(--font-sans)',
-                  fontSize: '14px', fontWeight: activeSection === s.id ? 500 : 400,
-                  transition: 'background 0.15s, color 0.15s', width: '100%', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  padding: '10px 20px', borderRadius: '40px', width: '180px',
+                  background: activeSection === s.id ? 'var(--color-brand)' : 'var(--color-surface)',
+                  color: activeSection === s.id ? '#FFFFFF' : 'var(--color-text-secondary)',
+                  border: activeSection === s.id ? '1px solid var(--color-brand)' : '1px solid var(--color-border)',
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                  fontSize: '14px', fontWeight: 500,
+                  transition: 'all 0.2s',
+                  boxShadow: activeSection === s.id ? '0 4px 14px rgba(0,180,216,0.3)' : '0 2px 4px rgba(0,0,0,0.02)'
                 }}
               >
                 {s.icon} {s.label}
               </button>
             ))}
-          </div>
-        </Card>
+        </div>
 
         {/* Settings content */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -206,9 +207,20 @@ export default function SettingsPage() {
 
           {activeSection === 'categories' && (
             <Card>
-              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>App Category Mapping</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {settings.appCategories.map((item, i) => (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>App Category Mapping</h3>
+                <input
+                  type="text"
+                  placeholder="Search applications..."
+                  value={searchCategory}
+                  onChange={(e) => setSearchCategory(e.target.value)}
+                  style={{ ...inputStyle, width: '250px', padding: '8px 12px' }}
+                />
+              </div>
+              <div className="custom-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
+                {settings.appCategories
+                  .filter(item => item.app.toLowerCase().includes(searchCategory.toLowerCase()))
+                  .map((item, i) => (
                   <div key={item.app + '-' + i} style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     padding: '8px 12px', borderRadius: 'var(--radius-sm)',
@@ -218,23 +230,35 @@ export default function SettingsPage() {
                     <select
                       value={item.category}
                       onChange={(e) => {
-                        const updated = [...settings.appCategories];
-                        updated[i] = { ...item, category: e.target.value };
+                        const updated = settings.appCategories.map(cat => 
+                          cat.app === item.app ? { ...cat, category: e.target.value } : cat
+                        );
                         setSettings({ ...settings, appCategories: updated });
                       }}
                       style={{
                         padding: '6px 10px', borderRadius: 'var(--radius-sm)',
                         border: '1px solid var(--color-border)', fontSize: '13px',
                         fontFamily: 'var(--font-sans)', background: 'var(--color-surface)',
+                        width: '130px', flexShrink: 0
                       }}
                     >
                       <option value="productive">Productive</option>
                       <option value="neutral">Neutral</option>
                       <option value="distracting">Distracting</option>
                     </select>
-                    <StatusBadge status={item.category} size="sm" />
+                    <StatusBadge 
+                      status={item.category} 
+                      size="sm" 
+                      style={{ width: '100px', justifyContent: 'center', flexShrink: 0 }} 
+                    />
                   </div>
                 ))}
+                
+                {settings.appCategories.filter(item => item.app.toLowerCase().includes(searchCategory.toLowerCase())).length === 0 && (
+                  <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-secondary)', border: '1px dashed var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+                    No applications match your search.
+                  </div>
+                )}
               </div>
             </Card>
           )}
@@ -309,7 +333,7 @@ export default function SettingsPage() {
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <Button 
-                          variant="outline" 
+                          variant="secondary" 
                           size="sm" 
                           disabled={isSubmitting} 
                           onClick={() => handleDemoteAdmin(admin.id)}
@@ -318,11 +342,11 @@ export default function SettingsPage() {
                           <UserMinus size={14} /> Demote
                         </Button>
                         <Button 
-                          variant="outline" 
+                          variant="danger" 
                           size="sm" 
                           disabled={isSubmitting} 
                           onClick={() => handleDeleteAdmin(admin.id)}
-                          style={{ display: 'flex', gap: '6px', alignItems: 'center', padding: '6px 10px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }}
+                          style={{ display: 'flex', gap: '6px', alignItems: 'center', padding: '6px 10px' }}
                         >
                           <Trash size={14} /> Delete
                         </Button>

@@ -75,13 +75,14 @@ export default function ProjectsPage() {
     
     if (group.length > 1) {
       const doneCount = group.filter(g => g.status === 'done').length;
-      teamProgress = `${doneCount}/${group.length}`;
+      const reviewCount = group.filter(g => g.status === 'in_review').length;
+      teamProgress = `${doneCount + reviewCount}/${group.length}`;
       
-      if (group.every(g => g.status === 'done')) {
+      if (doneCount === group.length) {
         derivedStatus = 'done';
       } else if (group.some(g => g.status === 'failed')) {
         derivedStatus = 'failed';
-      } else if (group.some(g => g.status === 'in_review')) {
+      } else if (reviewCount > 0) {
         derivedStatus = 'in_review';
       } else {
         derivedStatus = 'active';
@@ -135,7 +136,7 @@ export default function ProjectsPage() {
               <tr key={p.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                 <td style={{ padding: '16px' }}>
                   <div style={{ fontWeight: 500, color: 'var(--color-text)' }}>{p.name}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', maxWidth: '300px', whiteSpace: 'pre-wrap', lineHeight: '1.4', marginTop: '4px' }}>
                     {p.description || 'No description'}
                   </div>
                 </td>

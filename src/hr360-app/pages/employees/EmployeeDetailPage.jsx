@@ -17,6 +17,7 @@ import { APP_CATEGORY_COLORS } from '@/hr360-app/utils/constants';
 import { getEmployeeById, uploadEmployeeDocument, updateEmployee } from '@/hr360-app/services/employeeService';
 import { getProjects } from '@/hr360-app/services/projectsService';
 import { getNotifications, markAsRead } from '@/hr360-app/services/notificationsService';
+import { getLeaveRequests } from '@/hr360-app/services/leaveService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ChartTooltip from '@/hr360-app/components/shared/charts/ChartTooltip';
 import { AXIS_STYLE, GRID_STYLE, CHART_COLORS } from '@/hr360-app/components/shared/charts/chartTheme';
@@ -60,14 +61,19 @@ const HISTORY_COLUMNS = [
   {
     key: 'prodRatio',
     label: 'Productivity Ratio',
-    render: (val) => (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '130px' }}>
-        <div style={{ flex: 1 }}>
-          <ProgressBar value={val || 0} max={100} height={6} status={(val || 0) >= 70 ? 'success' : (val || 0) >= 50 ? 'info' : 'warning'} animated={false} />
+    render: (val, row) => {
+      if (row?.status === 'on_leave' || row?.status === 'absent' || row?.status === 'holiday') {
+        return <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>—</span>;
+      }
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '130px' }}>
+          <div style={{ flex: 1 }}>
+            <ProgressBar value={val || 0} max={100} height={6} status={(val || 0) >= 70 ? 'success' : (val || 0) >= 50 ? 'info' : 'warning'} animated={false} />
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 500, fontFeatureSettings: '"tnum"' }}>{val || 0}%</span>
         </div>
-        <span style={{ fontSize: '12px', fontWeight: 500, fontFeatureSettings: '"tnum"' }}>{val || 0}%</span>
-      </div>
-    ),
+      );
+    },
   },
 ];
 
@@ -79,6 +85,7 @@ export default function EmployeeDetailPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [employeeProjects, setEmployeeProjects] = useState([]);
   const [employeeIssues, setEmployeeIssues] = useState([]);
+  const [employeeLeaves, setEmployeeLeaves] = useState([]);
   const [customDocs, setCustomDocs] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [docCategory, setDocCategory] = useState('onboarding');
@@ -201,11 +208,16 @@ All attendance tracking, productivity utilization ratios, salary computations, a
         const data = await getEmployeeById(id);
         const projectsData = await getProjects(id);
         const notificationsData = await getNotifications();
+        const leavesData = await getLeaveRequests();
         
         if (!cancelled) {
           setEmployee(data);
           setShiftStartInput(data.expected_shift_start ? data.expected_shift_start.substring(0, 5) : '09:00');
           setEmployeeProjects(projectsData || []);
+          
+          if (leavesData) {
+            setEmployeeLeaves(leavesData.filter(l => String(l.employee_id) === String(id)));
+          }
           
           if (data) {
             const issues = notificationsData.filter(n => 
@@ -242,6 +254,7 @@ All attendance tracking, productivity utilization ratios, salary computations, a
     { id: 'apps', label: 'App Usage' },
     { id: 'documents', label: 'Documents' },
     { id: 'history', label: 'History' },
+    { id: 'leaves', label: 'Leave History' },
     { id: 'projects', label: 'Projects & Tasks' },
     { id: 'issues', label: 'Reported Issues' },
   ];
@@ -615,6 +628,41 @@ All attendance tracking, productivity utilization ratios, salary computations, a
               data={employee.history || []}
               emptyMessage="No historical activity records found for this employee yet."
             />
+          </div>
+        )}
+
+        {activeTab === 'leaves' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+              Past and current leave requests for {employee.name}.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+              {employeeLeaves.map(leave => (
+                <Card key={leave.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ fontWeight: 600, fontSize: '15px', textTransform: 'capitalize' }}>{leave.leave_type?.replace('_', ' ')} Leave</h4>
+                    <StatusBadge 
+                      status={leave.status === 'approved' ? 'success' : (leave.status === 'rejected' ? 'danger' : 'warning')} 
+                      label={leave.status?.charAt(0).toUpperCase() + leave.status?.slice(1)} 
+                    />
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', display: 'flex', gap: '16px', marginTop: '4px' }}>
+                    <span><strong>From:</strong> {new Date(leave.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span><strong>To:</strong> {new Date(leave.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                  {leave.reason && (
+                    <div style={{ marginTop: '8px', padding: '8px', background: 'var(--color-bg)', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-text)' }}>
+                      <strong>Reason:</strong> {leave.reason}
+                    </div>
+                  )}
+                </Card>
+              ))}
+              {employeeLeaves.length === 0 && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <EmptyState title="No Leave History" description="This employee has not submitted any leave requests." />
+                </div>
+              )}
+            </div>
           </div>
         )}
 

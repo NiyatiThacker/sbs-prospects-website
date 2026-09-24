@@ -5,8 +5,8 @@ export default function CountdownTimer({ deadline, status, onZero }) {
   const [isLate, setIsLate] = useState(false);
 
   useEffect(() => {
-    if (status === 'done') {
-      setTimeLeft('Completed');
+    if (status === 'done' || status === 'in_review') {
+      setTimeLeft(status === 'done' ? 'Completed' : 'Under Review');
       setIsLate(false);
       return;
     }

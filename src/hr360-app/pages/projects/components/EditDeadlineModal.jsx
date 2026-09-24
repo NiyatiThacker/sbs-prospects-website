@@ -54,16 +54,16 @@ export default function EditDeadlineModal({ isOpen, onClose, onSave, project }) 
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-secondary)' }}>Reason for Extension</label>
-            <input 
-              type="text" 
+            <textarea 
               value={reason} 
               onChange={e => setReason(e.target.value)} 
               placeholder="e.g., Scope increased, Employee sick"
               required
+              rows={3}
               style={{
                 width: '100%', padding: '10px', borderRadius: '6px',
                 border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-alt)',
-                color: 'var(--color-text)'
+                color: 'var(--color-text)', resize: 'vertical', fontFamily: 'inherit'
               }}
             />
           </div>
@@ -101,7 +101,7 @@ export default function EditDeadlineModal({ isOpen, onClose, onSave, project }) 
                   <div style={{ marginBottom: '4px' }}>
                     <strong>Requested Deadline:</strong> {new Date(req.requestedDeadline).toLocaleString()}
                   </div>
-                  <div>
+                  <div style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
                     <strong>Reason:</strong> {req.reason}
                   </div>
                   <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -156,7 +156,7 @@ export default function EditDeadlineModal({ isOpen, onClose, onSave, project }) 
                   <div style={{ marginBottom: '4px' }}>
                     <strong>New:</strong> {new Date(ext.newDeadline).toLocaleString()}
                   </div>
-                  <div>
+                  <div style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
                     <strong>Reason:</strong> {ext.reason}
                   </div>
                   <div style={{ marginTop: '8px', color: 'var(--color-text-secondary)', fontSize: '11px' }}>

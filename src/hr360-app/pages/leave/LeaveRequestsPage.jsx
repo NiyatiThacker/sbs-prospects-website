@@ -83,7 +83,7 @@ export default function LeaveRequestsPage() {
                     <td style={{ padding: '16px', color: 'var(--color-text-secondary)' }}>
                       {req.end_date}
                     </td>
-                    <td style={{ padding: '16px', color: 'var(--color-text-secondary)', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={req.reason}>
+                    <td style={{ padding: '16px', color: 'var(--color-text-secondary)', maxWidth: '300px', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
                       {req.reason}
                     </td>
                     <td style={{ padding: '16px' }}>

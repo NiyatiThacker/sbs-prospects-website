@@ -22,6 +22,7 @@ import {
 import { useMediaQuery } from '@/hr360-app/hooks/useMediaQuery';
 import { useAuth } from '@/hr360-app/context/AuthContext';
 import { getLeaveRequests } from '@/hr360-app/services/leaveService';
+import { getProjects } from '@/hr360-app/services/projectsService';
 
 const ICON_MAP = {
   LayoutDashboard,
@@ -61,16 +62,30 @@ export default function Sidebar({ collapsed, onToggle }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const { user } = useAuth();
   const [pendingLeavesCount, setPendingLeavesCount] = useState(0);
+  const [pendingProjectsCount, setPendingProjectsCount] = useState(0);
 
   useEffect(() => {
     if (user?.role === 'Admin') {
-      const fetchCount = async () => {
-        const reqs = await getLeaveRequests();
-        const pending = reqs.filter(r => r.status === 'pending');
-        setPendingLeavesCount(pending.length);
+      const fetchCounts = async () => {
+        const [reqs, projects] = await Promise.all([
+          getLeaveRequests(),
+          getProjects()
+        ]);
+        
+        const pendingLeaves = reqs.filter(r => r.status === 'pending');
+        setPendingLeavesCount(pendingLeaves.length);
+        
+        let pendingExt = 0;
+        projects.forEach(p => {
+          if (p.extension_requests && p.extension_requests.some(req => req.status === 'pending')) {
+            pendingExt++;
+          }
+        });
+        setPendingProjectsCount(pendingExt);
       };
-      fetchCount();
-      const interval = setInterval(fetchCount, 10000);
+      
+      fetchCounts();
+      const interval = setInterval(fetchCounts, 10000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -151,22 +166,29 @@ export default function Sidebar({ collapsed, onToggle }) {
             background: '#FFFFFF',
             display: 'flex',
             flexDirection: 'column',
-            padding: '24px 0',
-            gap: '16px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+            padding: '16px 0', // Reduced padding
+            gap: '8px',        // Reduced gap
+            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+            minHeight: 0
         }}>
-          {NAV_ITEMS.filter(item => item.roles.includes(user?.role || 'Admin')).map((item) => (
-            <SidebarLink
-              key={item.path}
-              item={item}
-              active={isActive(item.path)}
-              onNavigate={isMobile ? onToggle : undefined}
-              collapsed={collapsed}
-              badge={item.label === 'Leave Requests' ? pendingLeavesCount : 0}
-            />
-          ))}
+          {NAV_ITEMS.filter(item => item.roles.includes(user?.role || 'Admin')).map((item) => {
+            let badge = 0;
+            if (item.label === 'Leave Requests') badge = pendingLeavesCount;
+            if (item.label === 'Projects') badge = pendingProjectsCount;
+            
+            return (
+              <SidebarLink
+                key={item.path}
+                item={item}
+                active={isActive(item.path)}
+                onNavigate={isMobile ? onToggle : undefined}
+                collapsed={collapsed}
+                badge={badge}
+              />
+            );
+          })}
 
-          <div style={{ flex: 1 }} />
+          <div style={{ flex: 1, minHeight: '12px' }} />
 
           {NAV_BOTTOM.map((item) => (
             <SidebarLink
@@ -178,45 +200,6 @@ export default function Sidebar({ collapsed, onToggle }) {
             />
           ))}
 
-          {/* User Avatar & Toggle */}
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: collapsed ? 'column' : 'row', alignItems: 'center', justifyContent: 'center', gap: '16px', paddingBottom: '8px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: '#333',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              border: '2px solid rgba(255,255,255,0.1)',
-              flexShrink: 0
-            }}>
-              {user?.name ? user.name[0].toUpperCase() : 'A'}
-            </div>
-
-            <button 
-              onClick={onToggle}
-              style={{
-                background: 'rgba(0,0,0,0.05)',
-                border: 'none',
-                color: '#4B5563',
-                padding: '8px',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.1)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
-            >
-              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            </button>
-          </div>
         </motion.div>
       </motion.aside>
     </>
@@ -232,7 +215,7 @@ function SidebarLink({ item, active, onNavigate, collapsed, badge = 0 }) {
 
   return (
     <div 
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', flexShrink: 0 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -242,11 +225,11 @@ function SidebarLink({ item, active, onNavigate, collapsed, badge = 0 }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'flex-start',
-          width: collapsed ? '44px' : '100%',
-          height: '44px',
+          width: collapsed ? '40px' : '100%',
+          height: '40px',
           padding: collapsed ? '0' : '0 16px',
           gap: '12px',
-          borderRadius: collapsed ? '50%' : '22px',
+          borderRadius: collapsed ? '50%' : '20px',
           color: active ? '#FFFFFF' : '#6B7280',
           background: active ? '#00B4D8' : 'transparent',
           textDecoration: 'none',
@@ -311,7 +294,7 @@ function SidebarLink({ item, active, onNavigate, collapsed, badge = 0 }) {
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             style={{
               position: 'absolute',
-              left: '44px',
+              left: '40px',
               top: '50%',
               y: '-50%',
               background: '#FFFFFF',
