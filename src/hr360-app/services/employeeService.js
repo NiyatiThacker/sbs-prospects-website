@@ -1,3 +1,4 @@
+import { COMPANY_TIMEZONE, COMPANY_TIMEZONE_OFFSET_MINS, COMPANY_TIMEZONE_OFFSET_STR } from '@/hr360-app/config/timezone';
 /**
  * Employee data service.
  */
@@ -26,11 +27,11 @@ export async function getEmployees(filters = {}) {
       if (employees) {
         // Calculate current week date boundary (Monday to today) for weekly hours
         const now = new Date();
-        const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const todayStr = now.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
         const dayOfWeek = now.getDay();
         const offsetToMon = dayOfWeek === 0 ? -6 : (1 - dayOfWeek);
         const monThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offsetToMon);
-        const startOfWeekStr = monThisWeek.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const startOfWeekStr = monThisWeek.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
 
         // Fetch hours worked strictly within this week's date boundary
         const { data: summaries, error: sumError } = await supabase
@@ -58,21 +59,32 @@ export async function getEmployees(filters = {}) {
         });
 
         const empPresentDays = {};
+        const empLeaveDays = {};
         attendance?.forEach(a => {
           if (a.status === 'present' || a.status === 'wfh') {
             empPresentDays[a.employee_id] = (empPresentDays[a.employee_id] || 0) + 1;
           } else if (a.status === 'late') {
             empPresentDays[a.employee_id] = (empPresentDays[a.employee_id] || 0) + 0.7; // Late penalty
+          } else if (a.status === 'on_leave' || a.status === 'half_day') {
+            empLeaveDays[a.employee_id] = (empLeaveDays[a.employee_id] || 0) + 1;
           }
         });
 
         // Fetch latest ping from raw logs to determine active status (last 30 seconds)
         const { data: latestLogs } = await supabase
           .from('screentime_raw_logs')
-          .select('employee_id, timestamp')
-          .gte('timestamp', new Date(Date.now() - 30 * 1000).toISOString());
+          .select('employee_id, timestamp, window_title, process_name')
+          .gte('timestamp', new Date(Date.now() - 90 * 1000).toISOString())
+          .order('timestamp', { ascending: true });
 
-        const activeEmployees = new Set(latestLogs?.map(l => l.employee_id) || []);
+        const activeEmployeeStatuses = new Map();
+        latestLogs?.forEach(l => {
+          let st = 'active';
+          if (l.window_title === 'On Break' && l.process_name === 'Break') {
+            st = 'on_break';
+          }
+          activeEmployeeStatuses.set(l.employee_id, st);
+        });
 
         const results = employees.map(emp => {
           const totalMins = empTotalMins[emp.id] || 0;
@@ -80,22 +92,26 @@ export async function getEmployees(filters = {}) {
           const hoursWorked = Math.round((totalMins / 60) * 10) / 10;
           const presentDays = empPresentDays[emp.id] || 0;
           
+          const leaveDays = empLeaveDays[emp.id] || 0;
           const daysPassedThisWeek = Math.max(1, Math.floor((now.getTime() - monThisWeek.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+          
+          const adjustedTotalWorkDays = Math.max(1, daysPassedThisWeek - leaveDays);
+          const adjustedHoursAllotted = Math.max(8, 40 - (leaveDays * 8));
 
           const { score } = calculateProductivityScore({
             hoursWorked,
-            hoursAllotted: 40,
+            hoursAllotted: adjustedHoursAllotted,
             productiveMinutes: prodMins,
             totalAppMinutes: totalMins,
             presentDays,
-            totalWorkDays: daysPassedThisWeek,
+            totalWorkDays: adjustedTotalWorkDays,
           });
 
           return {
             ...emp,
-            status: activeEmployees.has(emp.id) ? 'active' : 'inactive',
+            status: activeEmployeeStatuses.has(emp.id) ? activeEmployeeStatuses.get(emp.id) : 'inactive',
             hoursWorked: hoursWorked || 0,
-            hoursAllotted: 40,
+            hoursAllotted: adjustedHoursAllotted,
             score,
           };
         });
@@ -177,11 +193,11 @@ export async function getEmployeeById(id) {
 
         // Weekly hours (current calendar week Monday to Saturday with automatic weekly refresh)
         const now = new Date();
-        const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const todayStr = now.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
         const dayOfWeek = now.getDay(); // 0 is Sun, 1 is Mon, 6 is Sat
         const offsetToMon = dayOfWeek === 0 ? -6 : (1 - dayOfWeek);
         const monThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offsetToMon);
-        const startOfWeekStr = monThisWeek.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const startOfWeekStr = monThisWeek.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
 
         const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const dayMinsByDate = {};
@@ -193,7 +209,7 @@ export async function getEmployeeById(id) {
 
         const weeklyHours = daysOfWeek.map((day, i) => {
           const d = new Date(monThisWeek.getFullYear(), monThisWeek.getMonth(), monThisWeek.getDate() + i);
-          const dateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+          const dateStr = d.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
           
           let mins = dayMinsByDate[dateStr] || 0;
           let hours = Math.round((mins / 60) * 10) / 10;
@@ -215,7 +231,7 @@ export async function getEmployeeById(id) {
           try {
             const date = new Date(`1970-01-01T${timeStr}Z`);
             if (isNaN(date.getTime())) return timeStr.split('.')[0];
-            return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata', hour12: false });
+            return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: COMPANY_TIMEZONE, hour12: false });
           } catch {
             return timeStr.split('.')[0];
           }
@@ -257,7 +273,16 @@ export async function getEmployeeById(id) {
         const history = Object.values(historyMap)
           .map(h => {
             const hours = Math.round((h.totalMinutes / 60) * 10) / 10;
-            const prodRatio = h.totalMinutes > 0 ? Math.round((h.productiveMinutes / h.totalMinutes) * 100) : (h.status === 'absent' ? 0 : 100);
+            let prodRatio = 0;
+            if (h.totalMinutes > 0) {
+              prodRatio = Math.round((h.productiveMinutes / h.totalMinutes) * 100);
+            } else if (h.status === 'on_leave' || h.status === 'half_day') {
+              prodRatio = null;
+            } else if (h.status === 'absent') {
+              prodRatio = 0;
+            } else {
+              prodRatio = 100;
+            }
             return {
               ...h,
               hours,
@@ -265,6 +290,47 @@ export async function getEmployeeById(id) {
             };
           })
           .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Auto-recover missing check-ins and check-outs from raw logs
+        const daysToRecover = history.filter(h => (h.checkIn === '—' || h.checkOut === '—') && h.totalMinutes > 0);
+        for (const h of daysToRecover) {
+          try {
+            const startOfDay = new Date(`${h.date}T00:00:00+05:30`).toISOString();
+            const endOfDay = new Date(`${h.date}T23:59:59+05:30`).toISOString();
+            
+            if (h.checkIn === '—') {
+              const { data: firstLog } = await supabase
+                .from('screentime_raw_logs')
+                .select('timestamp')
+                .eq('employee_id', id)
+                .gte('timestamp', startOfDay)
+                .lte('timestamp', endOfDay)
+                .order('timestamp', { ascending: true })
+                .limit(1);
+              if (firstLog && firstLog.length > 0) {
+                const ts = firstLog[0].timestamp.endsWith('Z') ? firstLog[0].timestamp : firstLog[0].timestamp + 'Z';
+                h.checkIn = new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: COMPANY_TIMEZONE, hour12: false });
+              }
+            }
+            
+            if (h.checkOut === '—') {
+              const { data: lastLog } = await supabase
+                .from('screentime_raw_logs')
+                .select('timestamp')
+                .eq('employee_id', id)
+                .gte('timestamp', startOfDay)
+                .lte('timestamp', endOfDay)
+                .order('timestamp', { ascending: false })
+                .limit(1);
+              if (lastLog && lastLog.length > 0) {
+                const ts = lastLog[0].timestamp.endsWith('Z') ? lastLog[0].timestamp : lastLog[0].timestamp + 'Z';
+                h.checkOut = new Date(ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: COMPANY_TIMEZONE, hour12: false });
+              }
+            }
+          } catch (e) {
+            console.warn('Could not auto-recover check-in for date:', h.date, e);
+          }
+        }
 
         // Attendance summary strictly computed from ACTUAL recorded database activity in the current month!
         const currentYear = now.getFullYear();
@@ -288,34 +354,45 @@ export async function getEmployeeById(id) {
         
         // Find current week's present days for this employee based on history
         let presentDaysThisWeek = 0;
+        let leaveDaysThisWeek = 0;
         history.forEach(h => {
           const d = new Date(h.date);
           if (d >= monThisWeek && d <= now) {
             if (h.status === 'present' || h.status === 'wfh') presentDaysThisWeek += 1;
             else if (h.status === 'late') presentDaysThisWeek += 0.7;
+            else if (h.status === 'on_leave' || h.status === 'half_day') leaveDaysThisWeek += 1;
           }
         });
+
+        const adjustedTotalWorkDays = Math.max(1, daysPassedThisWeek - leaveDaysThisWeek);
+        const adjustedHoursAllotted = Math.max(8, 40 - (leaveDaysThisWeek * 8));
 
         const prodSumMins = summaries?.filter(s => s.category === 'productive' && s.date >= startOfWeekStr && s.date <= todayStr).reduce((sum, s) => sum + s.total_minutes, 0) || 0;
         
         const { score, breakdown } = calculateProductivityScore({
           hoursWorked,
-          hoursAllotted: 40,
+          hoursAllotted: adjustedHoursAllotted,
           productiveMinutes: prodSumMins,
           totalAppMinutes: totalMins,
           presentDays: presentDaysThisWeek,
-          totalWorkDays: daysPassedThisWeek
+          totalWorkDays: adjustedTotalWorkDays
         });
 
-        // Check if currently active (ping in last 30 seconds)
         const { data: latestLog } = await supabase
           .from('screentime_raw_logs')
-          .select('timestamp')
+          .select('timestamp, window_title, process_name')
           .eq('employee_id', id)
           .gte('timestamp', new Date(Date.now() - 30 * 1000).toISOString())
+          .order('timestamp', { ascending: false })
           .limit(1);
           
-        const isActive = latestLog && latestLog.length > 0;
+        let currentStatus = 'inactive';
+        if (latestLog && latestLog.length > 0) {
+          currentStatus = 'active';
+          if (latestLog[0].window_title === 'On Break' && latestLog[0].process_name === 'Break') {
+            currentStatus = 'on_break';
+          }
+        }
         
 
         // Calculate Daily Application Usage from actual logs (today's activity, or latest recorded active day if none today)
@@ -380,9 +457,9 @@ export async function getEmployeeById(id) {
 
         return {
           ...emp,
-          status: isActive ? 'active' : 'inactive',
+          status: currentStatus,
           hoursWorked,
-          hoursAllotted: 40,
+          hoursAllotted: adjustedHoursAllotted,
           score,
           breakdown,
           weeklyHours,

@@ -1,3 +1,4 @@
+import { COMPANY_TIMEZONE, COMPANY_TIMEZONE_OFFSET_MINS, COMPANY_TIMEZONE_OFFSET_STR } from '@/hr360-app/config/timezone';
 import { useState, useEffect, useMemo } from 'react';
 import { getAttendance } from '@/hr360-app/services/attendanceService';
 
@@ -5,7 +6,7 @@ export default function useAttendanceData() {
   const [records, setRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) });
+  const [filters, setFilters] = useState({ date: new Date().toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE }) });
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +34,7 @@ export default function useAttendanceData() {
         presentCount: 0,
         absentCount: 0,
         lateCount: 0,
-        targetDate: filters.date || new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+        targetDate: filters.date || new Date().toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE })
       };
     }
 

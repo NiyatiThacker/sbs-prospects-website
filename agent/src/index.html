@@ -105,12 +105,16 @@
             </div>
             <div class="user-info">
               <h2 id="connected-user-text">User</h2>
-              <span class="status-badge"><span class="status-dot"></span> Active Session</span>
+              <span id="session-status-badge" class="status-badge"><span class="status-dot"></span> Active Session</span>
             </div>
           </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <button id="break-btn" class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 12px;">Take Break</button>
+            <span id="break-timer-display" class="hidden" style="font-weight: 600; font-size: 13px; color: #F59E0B;"></span>
           <button id="hide-btn" class="icon-btn-ghost" title="Minimize to Tray">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>
           </button>
+          </div>
         </header>
 
         <!-- Navigation Tabs -->

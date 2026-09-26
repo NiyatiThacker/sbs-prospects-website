@@ -1,3 +1,4 @@
+import { COMPANY_TIMEZONE, COMPANY_TIMEZONE_OFFSET_MINS, COMPANY_TIMEZONE_OFFSET_STR } from '@/hr360-app/config/timezone';
 /**
  * Dashboard data service — fetches KPIs, trends, department comparison, and alerts.
  */
@@ -122,7 +123,7 @@ export async function getDashboardKpis() {
 }
 
 export async function getHoursTrend() {
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
   
   if (isSupabaseConfigured) {
     try {
@@ -148,7 +149,7 @@ export async function getHoursTrend() {
       const trend = [];
       for (let i = 0; i < 14; i++) {
         const d = new Date(mondayLastWeek.getTime() + i * 24 * 60 * 60 * 1000);
-        const dateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const dateStr = d.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
         const dateFormatted = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
         const displayDay = d.toLocaleDateString('en-US', { weekday: 'short' });
         

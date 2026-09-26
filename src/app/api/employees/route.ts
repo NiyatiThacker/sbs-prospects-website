@@ -103,20 +103,21 @@ export async function DELETE(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, role, department, expected_shift_start } = body;
+    const { id, role, department, expected_shift_start, expected_shift_end } = body;
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    if (!id || (!role && !department && !expected_shift_start)) {
+    if (!id || (!role && !department && expected_shift_start === undefined && expected_shift_end === undefined)) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const updates: any = {};
     if (role) updates.role = role;
     if (department) updates.department = department;
-    if (expected_shift_start) updates.expected_shift_start = expected_shift_start;
+    if (expected_shift_start !== undefined) updates.expected_shift_start = expected_shift_start;
+    if (expected_shift_end !== undefined) updates.expected_shift_end = expected_shift_end;
 
     const { error: dbError } = await supabaseAdmin.from('employees').update(updates).eq('id', id);
     if (dbError) {

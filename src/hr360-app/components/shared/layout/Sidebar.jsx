@@ -169,7 +169,9 @@ export default function Sidebar({ collapsed, onToggle }) {
             padding: '16px 0', // Reduced padding
             gap: '8px',        // Reduced gap
             boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-            minHeight: 0
+            minHeight: 0,
+            overflowY: 'auto',
+            overflowX: 'hidden'
         }}>
           {NAV_ITEMS.filter(item => item.roles.includes(user?.role || 'Admin')).map((item) => {
             let badge = 0;

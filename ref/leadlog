@@ -1,0 +1,134 @@
+## Objective
+
+Safely update the HR dashboard leaderboard logic to use **productive time as the primary ranking metric**.
+
+### Current Classification
+
+Employee activity is already classified as:
+
+* `productive`
+* `neutral`
+* `distracting`
+
+Do **not** change or redesign the existing activity classification system.
+
+---
+
+## Required Leaderboard Logic
+
+### Daily Leaderboard
+
+Rank employees by:
+
+```text
+Total Productive Hours
+```
+
+Rules:
+
+* More productive hours = higher rank.
+* If two employees have the same productive hours, they have the same position/tie.
+* Employee check-in time must NOT directly affect ranking.
+* Neutral time must NOT contribute to the score.
+* Distracting time must NOT contribute to the score.
+* Do not use productive/total tracked time for the daily ranking.
+
+Example:
+
+```text
+Employee A → 6h productive
+Employee B → 6h productive
+→ Same position
+
+Employee A → later reaches 8h productive
+Employee B → remains at 6h
+→ A ranks above B
+```
+
+The leaderboard should update in real time as productive time increases.
+
+---
+
+## Weekly & Monthly Leaderboard
+
+Use:
+
+### 1. Productive Hours
+
+Total productive hours accumulated during the selected period.
+
+### 2. Efficiency
+
+Use the existing/appropriate productivity efficiency calculation based on productive activity.
+
+Important:
+
+* Productive hours should remain the primary contribution metric.
+* Efficiency should be a separate metric and must not replace productive hours.
+* Do not give neutral activity any positive contribution.
+* Do not create a distraction penalty unless one already exists elsewhere and is required by the existing system.
+
+Do not invent additional scoring factors.
+
+---
+
+## Fairness Requirements
+
+Do NOT rank employees based on:
+
+* Check-in time
+* Check-out time
+* How early they started
+* How long they have been logged in
+* Neutral activity
+* Distracting activity
+
+The leaderboard should primarily reflect **actual productive work accumulated**.
+
+---
+
+## Safe Implementation Requirements
+
+Before making changes:
+
+1. Inspect the existing leaderboard calculation.
+2. Trace where daily, weekly, and monthly leaderboard data is calculated.
+3. Identify whether calculations happen in frontend, backend, database queries, RPCs, or a combination.
+4. Reuse the existing activity/time-tracking data structures wherever possible.
+5. Do not duplicate calculation logic unnecessarily.
+6. Do not modify authentication, employee tracking, check-in/check-out, activity classification, or unrelated dashboard functionality.
+7. Preserve existing UI unless a UI change is required to display the updated metrics.
+8. Handle ties correctly.
+9. Ensure the leaderboard updates correctly when new productive activity is recorded.
+10. Check for existing filters such as admin exclusion and preserve them.
+
+### Validation
+
+After implementation, test at least these cases:
+
+```text
+A = 6h productive
+B = 6h productive
+→ Same position
+
+A = 8h productive
+B = 6h productive
+→ A ranks higher
+
+A = 6h productive + 2h neutral
+B = 6h productive
+→ Same productive ranking basis; neutral does not increase A's score
+
+A checks in at 9 AM
+B checks in at 11 AM
+Both currently have 6h productive
+→ Same position
+```
+
+Also verify that weekly and monthly totals correctly aggregate productive activity across the selected date range.
+
+### Important
+
+Do not rewrite the entire leaderboard system.
+
+First inspect the existing implementation, identify the minimum required changes, then implement only those changes. Preserve all existing working functionality.

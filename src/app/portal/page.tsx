@@ -132,8 +132,8 @@ export default function HR360PortalPage() {
               Download the lightweight background agent for Windows. The agent automatically tracks screen time, application usage, and syncs data directly to the cloud.
             </p>
             <a 
-              href="/downloads/HR360-Agent-Setup.exe?v=2"
-              download="HR360-Agent-Setup.exe"
+              href="/downloads/HR360-Agent-Setup-v0.1.1.exe"
+              download="HR360-Agent-Setup-v0.1.1.exe"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 10,
                 padding: "0.75rem 2rem", borderRadius: 100,

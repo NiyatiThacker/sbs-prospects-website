@@ -6,6 +6,13 @@ let currentEmployeeName = null;
 let dataPollInterval = null;
 let knownProjectIds = new Set();
 
+// --- BREAK LOGIC VARIABLES ---
+let isOnBreak = false;
+let breakAllowanceSeconds = 60 * 60; // 60 minutes
+let breakCountdownInterval = null;
+let breakHeartbeatInterval = null;
+let hasGivenWarning = false;
+
 // --- TOAST NOTIFICATIONS ---
 window.showToast = (message, type = 'info') => {
   const container = document.getElementById('toast-container');
@@ -119,10 +126,106 @@ function showSuccessScreen(userLabel, empId) {
       if (!document.getElementById("success-screen").classList.contains("hidden")) {
         fetchAndDisplayProjects(currentEmployeeId);
         fetchAndDisplayLeaves(currentEmployeeId);
+        checkAdminForcedCheckout(currentEmployeeId);
       }
     }, 10000);
 
     fetchAndDisplayLeaves(currentEmployeeId);
+    syncBreakAllowance(currentEmployeeId);
+    checkAdminForcedCheckout(currentEmployeeId);
+  }
+}
+
+async function checkAdminForcedCheckout(employeeId) {
+  if (!supabaseClient || !employeeId) return;
+  try {
+    // 1. Fetch the latest raw log to get the true Server UTC Time (prevents OS clock spoofing)
+    const { data: latestLog, error: logErr } = await supabaseClient
+      .from('screentime_raw_logs')
+      .select('timestamp')
+      .eq('employee_id', employeeId)
+      .order('timestamp', { ascending: false })
+      .limit(1);
+
+    if (logErr || !latestLog || latestLog.length === 0) return;
+
+    // Convert server UTC to IST
+    const serverNow = new Date(latestLog[0].timestamp.endsWith('Z') ? latestLog[0].timestamp : latestLog[0].timestamp + 'Z');
+    const istTime = new Date(serverNow.getTime() + (330 * 60000));
+    
+    // Get current IST time components
+    const currentIstH = istTime.getUTCHours();
+    const currentIstM = istTime.getUTCMinutes();
+    const currentIstS = istTime.getUTCSeconds();
+    const currentTotalSeconds = currentIstH * 3600 + currentIstM * 60 + currentIstS;
+
+    // 2. Fetch expected shift timings
+    const { data: empData, error: empErr } = await supabaseClient
+      .from('employees')
+      .select('expected_shift_start, expected_shift_end')
+      .eq('id', employeeId)
+      .maybeSingle();
+      
+    if (!empErr && empData) {
+      let shiftEndStr = empData.expected_shift_end;
+      
+      // Fallback: Max work time 9h based on expected_shift_start if end is null
+      if (!shiftEndStr) {
+        let startStr = empData.expected_shift_start || '09:00:00';
+        let startParts = startStr.split(':');
+        let startH = parseInt(startParts[0], 10) || 9;
+        let endH = (startH + 9) % 24; // 9 hours max
+        shiftEndStr = `${String(endH).padStart(2, '0')}:${startParts[1] || '00'}:00`;
+      }
+
+      const shiftParts = shiftEndStr.split(':');
+      const shiftH = parseInt(shiftParts[0], 10) || 0;
+      const shiftM = parseInt(shiftParts[1], 10) || 0;
+      const shiftS = parseInt(shiftParts[2], 10) || 0;
+      
+      const shiftTotalSeconds = shiftH * 3600 + shiftM * 60 + shiftS;
+      
+      // Basic check for standard shifts
+      if (currentTotalSeconds >= shiftTotalSeconds && shiftH >= (parseInt((empData.expected_shift_start || '09').split(':')[0]) || 0)) {
+        window.showToast("Your scheduled 9-hour shift time has ended.", "warning");
+        document.getElementById("signout-btn").click();
+        return;
+      }
+    }
+    
+  } catch (err) {
+    console.warn("Could not check forced checkout status", err);
+  }
+}
+
+async function syncBreakAllowance(employeeId) {
+  if (!supabaseClient || !employeeId) return;
+  try {
+    const now = new Date();
+    const istTime = new Date(now.getTime() + (330 + now.getTimezoneOffset()) * 60000);
+    const dateStr = istTime.getFullYear() + '-' + String(istTime.getMonth()+1).padStart(2, '0') + '-' + String(istTime.getDate()).padStart(2, '0');
+    const startOfDayIST = new Date(`${dateStr}T00:00:00+05:30`).toISOString();
+    
+    const { count, error } = await supabaseClient
+      .from('screentime_raw_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('employee_id', employeeId)
+      .eq('process_name', 'Break')
+      .gte('timestamp', startOfDayIST);
+      
+    if (!error && count !== null) {
+      const consumedSeconds = count * 30;
+      breakAllowanceSeconds = Math.max(0, (60 * 60) - consumedSeconds);
+      
+      const timerDisplay = document.getElementById("break-timer-display");
+      if (timerDisplay) {
+         const m = Math.floor(breakAllowanceSeconds / 60);
+         const s = breakAllowanceSeconds % 60;
+         timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+      }
+    }
+  } catch (e) {
+    console.error("Error syncing break allowance", e);
   }
 }
 
@@ -559,6 +662,101 @@ window.requestProjectExtension = (id) => {
 };
 
 
+// --- BREAK LOGIC ---
+async function toggleBreak() {
+  const btn = document.getElementById("break-btn");
+  const timerDisplay = document.getElementById("break-timer-display");
+  const badge = document.getElementById("session-status-badge");
+
+  if (isOnBreak) {
+    // END BREAK
+    isOnBreak = false;
+    clearInterval(breakCountdownInterval);
+    clearInterval(breakHeartbeatInterval);
+    hasGivenWarning = false;
+
+    // Resume Rust monitor
+    if (currentEmployeeId) {
+      await invoke("resume_monitoring", { employeeId: currentEmployeeId });
+    }
+
+    btn.textContent = "Take Break";
+    btn.classList.remove("btn-danger");
+    btn.classList.add("btn-outline");
+    timerDisplay.classList.add("hidden");
+    
+    if (badge) badge.innerHTML = '<span class="status-dot"></span> Active Session';
+    
+    window.showToast("Break ended. Activity tracking resumed.", "success");
+    
+  } else {
+    // Always sync from server before starting a break to handle day rollovers or cross-device usage
+    btn.textContent = "Checking...";
+    await syncBreakAllowance(currentEmployeeId);
+    
+    if (breakAllowanceSeconds <= 0) {
+      btn.textContent = "Take Break";
+      window.showToast("Break allowance for today has been exhausted.", "error");
+      return;
+    }
+    
+    isOnBreak = true;
+    hasGivenWarning = false;
+
+    // Pause Rust monitor
+    await invoke("pause_monitoring");
+
+    btn.textContent = "End Break";
+    btn.classList.remove("btn-outline");
+    btn.classList.add("btn-danger");
+    timerDisplay.classList.remove("hidden");
+    
+    if (badge) badge.innerHTML = '<span class="status-dot" style="background:#F59E0B"></span> On Break';
+    
+    window.showToast("Break started. Activity tracking paused.", "info");
+
+    // Immediate heartbeat to update admin dash right away
+    sendBreakHeartbeat();
+
+    // 1. Send heartbeat every 30 seconds
+    breakHeartbeatInterval = setInterval(sendBreakHeartbeat, 30000);
+
+    // 2. Countdown timer every 1 second
+    breakCountdownInterval = setInterval(() => {
+      breakAllowanceSeconds--;
+      
+      const m = Math.floor(breakAllowanceSeconds / 60);
+      const s = breakAllowanceSeconds % 60;
+      timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+
+      if (breakAllowanceSeconds === 300 && !hasGivenWarning) {
+        hasGivenWarning = true;
+        window.showToast("Your break ends in 5 minutes. Activity tracking will resume automatically.", "warning");
+      }
+
+      if (breakAllowanceSeconds <= 0) {
+        // Auto resume
+        toggleBreak(); 
+        window.showToast("Break allowance reached. Activity tracking auto-resumed.", "warning");
+      }
+    }, 1000);
+  }
+}
+
+async function sendBreakHeartbeat() {
+  if (!supabaseClient || !currentEmployeeId) return;
+  try {
+    await supabaseClient.rpc('log_screentime', {
+      p_employee_id: currentEmployeeId,
+      p_process_name: 'Break',
+      p_window_title: 'On Break',
+      p_duration_seconds: 30
+    });
+  } catch (err) {
+    console.error("Failed to send break heartbeat", err);
+  }
+}
+
 // --- TAB SWITCHING ---
 function handleTabClick(e) {
   const btn = e.currentTarget;
@@ -591,6 +789,8 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("hide-btn").addEventListener("click", () => {
     invoke("hide_window");
   });
+
+  document.getElementById("break-btn")?.addEventListener("click", toggleBreak);
 
   document.getElementById("refresh-docs-btn")?.addEventListener("click", () => {
     if (currentEmployeeId) fetchAndDisplayDocuments(currentEmployeeId);

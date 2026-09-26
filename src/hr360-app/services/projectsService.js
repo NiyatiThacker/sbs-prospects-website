@@ -73,7 +73,7 @@ export async function verifyProjectSubmissions(projectName) {
       const { error } = await supabase.from('projects')
         .update({ status: 'done' })
         .eq('name', projectName)
-        .eq('status', 'in_review');
+        .in('status', ['in_review', 'active']);
         
       if (error) throw error;
       return true;

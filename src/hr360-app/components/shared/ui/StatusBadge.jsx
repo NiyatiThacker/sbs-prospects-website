@@ -9,6 +9,7 @@ const STATUS_STYLES = {
   late: { bg: 'var(--color-warning)', color: '#FFFFFF', label: 'Late' },
   half_day: { bg: 'var(--color-warning)', color: '#FFFFFF', label: 'Half-day' },
   on_leave: { bg: 'var(--color-neutral)', color: '#FFFFFF', label: 'On Leave' },
+  on_break: { bg: '#F59E0B', color: '#FFFFFF', label: 'On Break' },
   wfh: { bg: 'var(--color-info)', color: '#FFFFFF', label: 'WFH' },
   active: { bg: 'var(--color-success)', color: '#FFFFFF', label: 'Active' },
   inactive: { bg: 'var(--color-neutral)', color: '#FFFFFF', label: 'Inactive' },

@@ -1,3 +1,4 @@
+import { COMPANY_TIMEZONE, COMPANY_TIMEZONE_OFFSET_MINS, COMPANY_TIMEZONE_OFFSET_STR } from '@/hr360-app/config/timezone';
 /**
  * Leaderboard data service.
  */
@@ -16,7 +17,7 @@ export async function getLeaderboard(filters = {}) {
 
       // Calculate date boundary based on period
       const now = new Date();
-      const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+      const todayStr = now.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
       
       let startDateStr = todayStr;
       let hoursAllotted = 40;
@@ -32,18 +33,18 @@ export async function getLeaderboard(filters = {}) {
         const dayOfWeek = now.getDay();
         const offsetToMon = dayOfWeek === 0 ? -6 : (1 - dayOfWeek);
         const monThisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offsetToMon);
-        startDateStr = monThisWeek.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        startDateStr = monThisWeek.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
         hoursAllotted = 40;
         daysPassedInPeriod = Math.max(1, Math.floor((now.getTime() - monThisWeek.getTime()) / (1000 * 60 * 60 * 24)) + 1);
       } else if (period === 'monthly') {
         const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        startDateStr = firstOfMonth.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        startDateStr = firstOfMonth.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
         daysPassedInPeriod = Math.max(1, now.getDate());
         hoursAllotted = daysPassedInPeriod * 8; // approx 8 hours per day passed
       } else if (period === 'quarterly') {
         const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
         const firstOfQuarter = new Date(now.getFullYear(), quarterMonth, 1);
-        startDateStr = firstOfQuarter.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        startDateStr = firstOfQuarter.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
         daysPassedInPeriod = Math.max(1, Math.floor((now.getTime() - firstOfQuarter.getTime()) / (1000 * 60 * 60 * 24)) + 1);
         hoursAllotted = daysPassedInPeriod * 8;
       }

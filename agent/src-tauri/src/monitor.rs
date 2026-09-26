@@ -168,6 +168,7 @@ pub fn start_monitoring(employee_id: String, running_flag: Arc<AtomicBool>) {
                     }
 
                     // Send to Supabase RPC
+                    let mut all_success = true;
                     for payload in &payloads {
                         let url = format!("{}/rest/v1/rpc/log_screentime", supabase_url);
                         let res = client.post(&url)
@@ -181,22 +182,25 @@ pub fn start_monitoring(employee_id: String, running_flag: Arc<AtomicBool>) {
                         match res {
                             Ok(response) => {
                                 if !response.status().is_success() {
+                                    all_success = false;
                                     println!("Supabase Error for {}: {:?}", payload.process_name, response.text().await.unwrap_or_default());
                                 }
                             }
                             Err(e) => {
+                                all_success = false;
                                 println!("Network error for {}: {:?}", payload.process_name, e);
                             }
                         }
                     }
-                    println!("Successfully synced batch to Supabase.");
-
-                    // Note: A database trigger on Supabase should ideally handle 
-                    // updating the screentime_daily_summary, or we can add it here.
-                    // For simplicity, we just log raw metrics here.
+                    
+                    if all_success {
+                        println!("Successfully synced batch to Supabase.");
+                        usage_map.clear();
+                    } else {
+                        println!("Network issue detected. Buffering {} apps for next retry...", usage_map.len());
+                    }
                 }
 
-                usage_map.clear();
                 ticks = 0;
             }
         }

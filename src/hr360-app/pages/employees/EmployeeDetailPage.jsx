@@ -1,3 +1,4 @@
+import { COMPANY_TIMEZONE, COMPANY_TIMEZONE_OFFSET_MINS, COMPANY_TIMEZONE_OFFSET_STR } from '@/hr360-app/config/timezone';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, FileText, Calendar, Upload } from 'lucide-react';
@@ -56,14 +57,19 @@ const HISTORY_COLUMNS = [
   {
     key: 'hours',
     label: 'Screentime Hours',
-    render: (val) => <span style={{ fontWeight: 600, color: (val || 0) > 0 ? 'var(--color-brand)' : 'var(--color-text-secondary)' }}>{val || 0} hrs</span>,
+    render: (val, record) => {
+      if (record?.status === 'on_leave' || record?.status === 'half_day') {
+        return <span style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>Paused</span>;
+      }
+      return <span style={{ fontWeight: 600, color: (val || 0) > 0 ? 'var(--color-brand)' : 'var(--color-text-secondary)' }}>{val || 0} hrs</span>;
+    },
   },
   {
     key: 'prodRatio',
     label: 'Productivity Ratio',
-    render: (val, row) => {
-      if (row?.status === 'on_leave' || row?.status === 'absent' || row?.status === 'holiday') {
-        return <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>—</span>;
+    render: (val, record) => {
+      if (record?.status === 'on_leave' || record?.status === 'half_day' || record?.status === 'absent' || record?.status === 'holiday') {
+        return <span style={{ color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>Paused</span>;
       }
       return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '130px' }}>
@@ -95,17 +101,25 @@ export default function EmployeeDetailPage() {
 
   const [isEditingShift, setIsEditingShift] = useState(false);
   const [shiftStartInput, setShiftStartInput] = useState('');
+  const [shiftEndInput, setShiftEndInput] = useState('');
   const [isSavingShift, setIsSavingShift] = useState(false);
 
   const handleSaveShift = async () => {
     setIsSavingShift(true);
     try {
-      await updateEmployee(employee.id, { expected_shift_start: shiftStartInput + ':00' });
-      setEmployee(prev => ({ ...prev, expected_shift_start: shiftStartInput + ':00' }));
+      await updateEmployee(employee.id, { 
+        expected_shift_start: shiftStartInput + ':00',
+        expected_shift_end: shiftEndInput + ':00' 
+      });
+      setEmployee(prev => ({ 
+        ...prev, 
+        expected_shift_start: shiftStartInput + ':00',
+        expected_shift_end: shiftEndInput + ':00' 
+      }));
       setIsEditingShift(false);
-      toast.success('Shift start time updated successfully');
+      toast.success('Shift timings updated successfully');
     } catch (e) {
-      toast.error('Failed to update shift start time');
+      toast.error('Failed to update shift timings');
     } finally {
       setIsSavingShift(false);
     }
@@ -120,7 +134,7 @@ export default function EmployeeDetailPage() {
       const base64Content = event.target.result;
       const cleanTitle = docTitleInput.trim() || selectedFile.name.replace(/\.[^/.]+$/, "");
       const ext = (selectedFile.name.split('.').pop() || 'FILE').toUpperCase();
-      const newDateStr = `Uploaded on ${new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric', month: 'short', day: 'numeric' })}`;
+      const newDateStr = `Uploaded on ${new Date().toLocaleDateString('en-IN', { timeZone: COMPANY_TIMEZONE, year: 'numeric', month: 'short', day: 'numeric' })}`;
 
       let dbSuccess = true;
       try {
@@ -180,7 +194,7 @@ Employee Name  : ${employee?.name || 'Valued Employee'}
 Employee ID    : ${employee?.id || 'ID-0000'}
 Designation    : Software Specialist & Team Contributor
 Department     : Engineering & Technology
-Generated Date : ${new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full' })}
+Generated Date : ${new Date().toLocaleDateString('en-IN', { timeZone: COMPANY_TIMEZONE, dateStyle: 'full' })}
 =====================================================
 
 CONFIDENTIALITY & OFFICIAL VERIFICATION:
@@ -213,6 +227,7 @@ All attendance tracking, productivity utilization ratios, salary computations, a
         if (!cancelled) {
           setEmployee(data);
           setShiftStartInput(data.expected_shift_start ? data.expected_shift_start.substring(0, 5) : '09:00');
+          setShiftEndInput(data.expected_shift_end ? data.expected_shift_end.substring(0, 5) : '18:00');
           setEmployeeProjects(projectsData || []);
           
           if (leavesData) {
@@ -232,7 +247,7 @@ All attendance tracking, productivity utilization ratios, salary computations, a
               title: d.title || d.file_name,
               category: d.category || 'onboarding',
               fileName: d.file_name,
-              date: `Uploaded on ${new Date(d.created_at || Date.now()).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric', month: 'short', day: 'numeric' })}`,
+              date: `Uploaded on ${new Date(d.created_at || Date.now()).toLocaleDateString('en-IN', { timeZone: COMPANY_TIMEZONE, year: 'numeric', month: 'short', day: 'numeric' })}`,
               url: d.content || null,
               type: (d.file_type || 'PDF').toUpperCase(),
             }));
@@ -286,7 +301,7 @@ All attendance tracking, productivity utilization ratios, salary computations, a
               <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
                 <StatusBadge status={employee.status} />
                 <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginLeft: '8px' }}>
-                  Expected Shift Start:
+                  Shift Timings:
                 </span>
                 {isEditingShift ? (
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -296,13 +311,20 @@ All attendance tracking, productivity utilization ratios, salary computations, a
                       onChange={e => setShiftStartInput(e.target.value)} 
                       style={{ padding: '2px 6px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
                     />
+                    <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>to</span>
+                    <input 
+                      type="time" 
+                      value={shiftEndInput} 
+                      onChange={e => setShiftEndInput(e.target.value)} 
+                      style={{ padding: '2px 6px', fontSize: '13px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                    />
                     <Button size="sm" onClick={handleSaveShift} disabled={isSavingShift} style={{ padding: '2px 8px', height: '24px' }}>Save</Button>
                     <Button size="sm" variant="ghost" onClick={() => setIsEditingShift(false)} style={{ padding: '2px 8px', height: '24px' }}>Cancel</Button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     <span style={{ fontSize: '13px', fontWeight: 500 }}>
-                      {employee.expected_shift_start ? employee.expected_shift_start.substring(0, 5) : '09:00'}
+                      {employee.expected_shift_start ? employee.expected_shift_start.substring(0, 5) : '09:00'} - {employee.expected_shift_end ? employee.expected_shift_end.substring(0, 5) : '18:00'}
                     </span>
                     <button onClick={() => setIsEditingShift(true)} style={{ background: 'none', border: 'none', color: 'var(--color-brand)', cursor: 'pointer', fontSize: '12px' }}>
                       Edit

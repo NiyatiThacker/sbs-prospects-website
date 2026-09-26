@@ -1,3 +1,4 @@
+import { COMPANY_TIMEZONE, COMPANY_TIMEZONE_OFFSET_MINS, COMPANY_TIMEZONE_OFFSET_STR } from '@/hr360-app/config/timezone';
 import { useState } from 'react';
 import PageContainer from '@/hr360-app/components/shared/layout/PageContainer';
 import Card from '@/hr360-app/components/shared/ui/Card';
@@ -12,6 +13,7 @@ import { CalendarCheck, UserX, UserCheck, Clock, Home, Edit2 } from 'lucide-reac
 import { DEPARTMENTS } from '@/hr360-app/utils/constants';
 import useAttendanceData from './hooks/useAttendanceData';
 import { updateAttendanceStatus } from '@/hr360-app/services/attendanceService';
+import { updateEmployee } from '@/hr360-app/services/employeeService';
 import toast from 'react-hot-toast';
 
 const ATTENDANCE_COLUMNS = [
@@ -58,11 +60,15 @@ export default function AttendancePage() {
   const { records, summary, isLoading, error, filters, setFilters, refresh } = useAttendanceData();
   const [department, setDepartment] = useState('');
   const [status, setStatus] = useState('');
-  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }));
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE }));
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [newStatus, setNewStatus] = useState('');
+  const [newCheckIn, setNewCheckIn] = useState('');
+  const [newCheckOut, setNewCheckOut] = useState('');
+  const [newExpectedStart, setNewExpectedStart] = useState('');
+  const [newExpectedEnd, setNewExpectedEnd] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   if (isLoading) return <PageContainer><SkeletonDashboard /></PageContainer>;
@@ -71,6 +77,10 @@ export default function AttendancePage() {
   const handleEdit = (record) => {
     setEditingRecord(record);
     setNewStatus(record.status);
+    setNewCheckIn(record.checkIn && record.checkIn !== '—' && !record.isAutoRecoveredCheckIn ? record.checkIn : '');
+    setNewCheckOut(record.checkOut && record.checkOut !== '—' && !record.isAutoRecoveredCheckOut ? record.checkOut : '');
+    setNewExpectedStart(record.expectedShiftStart || '');
+    setNewExpectedEnd(record.expectedShiftEnd || '');
     setEditModalOpen(true);
   };
 
@@ -78,12 +88,23 @@ export default function AttendancePage() {
     if (!editingRecord) return;
     setIsSaving(true);
     try {
-      await updateAttendanceStatus(editingRecord.employeeId, editingRecord.date, newStatus);
-      toast.success('Attendance status updated successfully');
+      await updateAttendanceStatus(editingRecord.employeeId, editingRecord.date, newStatus, newCheckIn, newCheckOut);
+      
+      // Check if generic timing was modified
+      if (newExpectedStart !== editingRecord.expectedShiftStart || newExpectedEnd !== editingRecord.expectedShiftEnd) {
+        const hStart = newExpectedStart || null;
+        const hEnd = newExpectedEnd || null;
+        await updateEmployee(editingRecord.employeeId, {
+          expected_shift_start: hStart ? (hStart.length === 5 ? hStart + ':00' : hStart) : null,
+          expected_shift_end: hEnd ? (hEnd.length === 5 ? hEnd + ':00' : hEnd) : null
+        });
+      }
+
+      toast.success('Attendance record updated successfully');
       setEditModalOpen(false);
       refresh(); // Refresh the attendance data
     } catch (e) {
-      toast.error('Failed to update status');
+      toast.error('Failed to update record');
     } finally {
       setIsSaving(false);
     }
@@ -206,7 +227,7 @@ export default function AttendancePage() {
             <Button size="sm" variant="ghost" onClick={() => { 
               setDepartment(''); 
               setStatus(''); 
-              const defaultDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+              const defaultDate = new Date().toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
               setDate(defaultDate);
               setFilters({ date: defaultDate }); 
             }}>Clear</Button>
@@ -255,6 +276,67 @@ export default function AttendancePage() {
                 <option value="half_day">Half-day</option>
               </select>
             </div>
+            
+            <h4 style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--color-text-primary)' }}>Today's Timing</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Check In</label>
+                <input
+                  type="time"
+                  value={newCheckIn}
+                  onChange={(e) => setNewCheckIn(e.target.value)}
+                  style={{
+                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                    fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--color-text-primary)'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Check Out</label>
+                <input
+                  type="time"
+                  value={newCheckOut}
+                  onChange={(e) => setNewCheckOut(e.target.value)}
+                  style={{
+                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                    fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--color-text-primary)'
+                  }}
+                />
+              </div>
+            </div>
+
+            <h4 style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--color-text-primary)' }}>Generic Shift (All Days)</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Shift Start</label>
+                <input
+                  type="time"
+                  value={newExpectedStart}
+                  onChange={(e) => setNewExpectedStart(e.target.value)}
+                  style={{
+                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                    fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--color-text-primary)'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Shift End</label>
+                <input
+                  type="time"
+                  value={newExpectedEnd}
+                  onChange={(e) => setNewExpectedEnd(e.target.value)}
+                  style={{
+                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                    fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--color-text-primary)'
+                  }}
+                />
+              </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               <Button variant="outline" onClick={() => setEditModalOpen(false)} disabled={isSaving}>Cancel</Button>
               <Button onClick={handleSaveStatus} disabled={isSaving}>

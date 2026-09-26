@@ -40,6 +40,9 @@ export default function ProjectsPage() {
   };
 
   const handleExtend = async (projectId, newDeadline, reason) => {
+    setProjects(prev => prev.map(p => 
+      p.id === projectId ? { ...p, deadline: newDeadline } : p
+    ));
     await extendDeadline(projectId, newDeadline, reason);
     toast.success('Deadline Extended!');
     fetchProjects();
@@ -47,6 +50,9 @@ export default function ProjectsPage() {
 
   const handleZero = async (project) => {
     if (project.status === 'active') {
+      setProjects(prev => prev.map(p => 
+        p.name === project.name && p.status === 'active' ? { ...p, status: 'failed' } : p
+      ));
       await updateProjectStatus(project.id, 'failed');
       await notifyProjectDeadlineMissed(project.employee_name, project.name);
       fetchProjects();
@@ -54,8 +60,11 @@ export default function ProjectsPage() {
   };
 
   const handleVerify = async (projectName) => {
+    setProjects(prev => prev.map(p => 
+      p.name === projectName && (p.status === 'in_review' || p.status === 'active') ? { ...p, status: 'done' } : p
+    ));
     await verifyProjectSubmissions(projectName);
-    toast.success('Project submissions verified and marked as done!');
+    toast.success('Project marked as done!');
     fetchProjects();
   };
 
@@ -169,14 +178,14 @@ export default function ProjectsPage() {
                   )}
                 </td>
                 <td style={{ padding: '16px', textAlign: 'right' }}>
-                  {p.status === 'in_review' && (
+                  {(p.status === 'in_review' || p.status === 'active') && (
                     <button 
                       onClick={() => handleVerify(p.name)}
                       style={{
                         background: 'none', border: 'none', color: 'var(--color-success)',
                         cursor: 'pointer', padding: '4px', marginRight: '8px'
                       }}
-                      title="Verify & Approve"
+                      title="Mark as Done"
                     >
                       <CheckCircle size={16} />
                     </button>
