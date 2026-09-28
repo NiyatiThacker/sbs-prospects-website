@@ -61,7 +61,7 @@ export async function getOrgAppUsage() {
         return Object.values(usageMap)
           .map(item => ({
             app: item.app,
-            category: item.category,
+            category: item.app === 'Idle' ? 'neutral' : (item.category || 'neutral'),
             totalMinutes: item.totalMinutes,
             activeUsers: item.activeUsers.size,
             trend: calculateAppTrend(item.app, item.recentMinutes, item.priorMinutes, item.totalMinutes), 
@@ -148,7 +148,7 @@ export async function getEmployeeAppUsage(employeeId) {
         return Object.values(usageMap)
           .map(item => ({
             app: item.app,
-            category: item.category,
+            category: item.app === 'Idle' ? 'neutral' : (item.category || 'neutral'),
             totalMinutes: item.totalMinutes,
             trend: calculateAppTrend(item.app, item.recentMinutes, item.priorMinutes, item.totalMinutes),
           }))

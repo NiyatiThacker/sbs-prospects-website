@@ -19,6 +19,10 @@ use windows::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFOR
 use windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetWindowTextW, GetWindowThreadProcessId,
 };
+#[cfg(target_os = "windows")]
+use windows::Win32::UI::Input::KeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
+#[cfg(target_os = "windows")]
+use windows::Win32::System::SystemInformation::GetTickCount;
 
 #[derive(Default, Debug, Serialize)]
 struct AppUsage {
@@ -125,6 +129,25 @@ fn get_active_window() -> Option<(String, String)> {
     Some(("Linux Application".to_string(), "Active Window".to_string()))
 }
 
+#[cfg(target_os = "windows")]
+fn get_idle_time_seconds() -> u32 {
+    unsafe {
+        let mut lii = LASTINPUTINFO {
+            cbSize: std::mem::size_of::<LASTINPUTINFO>() as u32,
+            dwTime: 0,
+        };
+        let _ = GetLastInputInfo(&mut lii);
+        let tick_count = GetTickCount();
+        return (tick_count.saturating_sub(lii.dwTime)) / 1000;
+    }
+    0
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_idle_time_seconds() -> u32 {
+    0
+}
+
 pub fn start_monitoring(employee_id: String, running_flag: Arc<AtomicBool>) {
     tauri::async_runtime::spawn(async move {
         let supabase_url = "https://qewwumxaxznuxlkwdvpy.supabase.co".to_string();
@@ -143,7 +166,13 @@ pub fn start_monitoring(employee_id: String, running_flag: Arc<AtomicBool>) {
         while running_flag.load(Ordering::Relaxed) {
             interval.tick().await;
 
-            if let Some((process, title)) = get_active_window() {
+            if get_idle_time_seconds() > 300 {
+                let entry = usage_map.entry("Idle".to_string()).or_default();
+                entry.duration_seconds += 5;
+                if !entry.window_titles.contains(&"Away from keyboard".to_string()) {
+                    entry.window_titles.push("Away from keyboard".to_string());
+                }
+            } else if let Some((process, title)) = get_active_window() {
                 let entry = usage_map.entry(process).or_default();
                 entry.duration_seconds += 5;
                 if !entry.window_titles.contains(&title) {

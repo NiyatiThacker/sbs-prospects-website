@@ -382,7 +382,37 @@ All attendance tracking, productivity utilization ratios, salary computations, a
                   {((employee.hoursWorked / employee.hoursAllotted) * 100).toFixed(0)}%
                 </span>
               </div>
-              <ProgressBar value={employee.hoursWorked} max={employee.hoursAllotted} height={10} />
+              {(() => {
+                const isOvertime = employee.hoursWorked > employee.hoursAllotted;
+                const regularHours = Math.min(employee.hoursWorked, employee.hoursAllotted);
+                const overtimeHours = isOvertime ? (employee.hoursWorked - employee.hoursAllotted) : 0;
+                
+                return (
+                  <div style={{ width: '100%' }}>
+                    {isOvertime && (
+                      <div style={{ fontSize: '13px', color: 'var(--color-warning)', fontWeight: 600, marginBottom: '4px', textAlign: 'right' }}>
+                        +{formatHours(overtimeHours)} Overtime Logged
+                      </div>
+                    )}
+                    <div style={{ width: '100%', height: '10px', background: 'var(--color-bg-secondary)', borderRadius: '10px', display: 'flex', overflow: 'hidden' }}>
+                      <motion.div 
+                        initial={{ width: 0 }} 
+                        animate={{ width: `${(regularHours / employee.hoursAllotted) * 100}%` }} 
+                        transition={{ duration: 0.8 }} 
+                        style={{ background: 'var(--color-brand)', height: '100%' }} 
+                      />
+                      {isOvertime && (
+                        <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: `${Math.min(100, (overtimeHours / employee.hoursAllotted) * 100)}%` }} 
+                          transition={{ duration: 0.8, delay: 0.4 }} 
+                          style={{ background: 'var(--color-warning)', height: '100%', borderLeft: '1px solid rgba(255,255,255,0.3)' }} 
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               <ResponsiveContainer width="100%" height={180} style={{ marginTop: '20px' }}>
                 <BarChart data={employee.weeklyHours} margin={{ top: 8, right: 0, left: -24, bottom: 0 }}>
                   <CartesianGrid {...GRID_STYLE} />

@@ -89,10 +89,36 @@ async function handleLogin(e) {
     
     const employeeId = empData?.id || authData.user.id;
 
-    // 3. Start monitoring via Rust Backend
+    // 3. Handle WFH Checkbox
+    const isWfh = document.getElementById("wfh-checkbox")?.checked;
+    if (isWfh && employeeId) {
+      try {
+        const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+        const { data: existingRecord } = await supabaseClient
+          .from('attendance_records')
+          .select('id')
+          .eq('employee_id', employeeId)
+          .eq('date', todayDate)
+          .maybeSingle();
+
+        if (!existingRecord) {
+          await supabaseClient.from('attendance_records').insert({
+            employee_id: employeeId,
+            date: todayDate,
+            status: 'wfh',
+            check_in: new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })
+          });
+          console.log("Logged WFH for today.");
+        }
+      } catch (wfhErr) {
+        console.warn("Failed to set WFH status", wfhErr);
+      }
+    }
+
+    // 4. Start monitoring via Rust Backend
     await invoke("start_monitoring_with_credentials", { employeeId });
 
-    // 4. Show success & fetch HR documents
+    // 5. Show success & fetch HR documents
     showSuccessScreen(empData?.name || userEmail || employeeId, employeeId);
   } catch (err) {
     errorMsg.textContent = err.message || "Invalid credentials.";
@@ -187,8 +213,10 @@ async function checkAdminForcedCheckout(employeeId) {
       
       // Basic check for standard shifts
       if (currentTotalSeconds >= shiftTotalSeconds && shiftH >= (parseInt((empData.expected_shift_start || '09').split(':')[0]) || 0)) {
-        window.showToast("Your scheduled 9-hour shift time has ended.", "warning");
-        document.getElementById("signout-btn").click();
+        if (!window.hasShownOvertimeWarning) {
+          window.showToast("Your standard shift has ended. Additional time is being tracked as overtime.", "info");
+          window.hasShownOvertimeWarning = true;
+        }
         return;
       }
     }

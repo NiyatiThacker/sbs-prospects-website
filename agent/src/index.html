@@ -88,6 +88,11 @@
             <input id="password" type="password" placeholder="••••••••" required autocomplete="current-password" />
           </div>
           
+          <div class="input-group checkbox-group" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 20px;">
+            <input type="checkbox" id="wfh-checkbox" style="width: auto; margin: 0; accent-color: var(--color-primary);" />
+            <label for="wfh-checkbox" style="margin: 0; cursor: pointer; color: var(--color-text-secondary); font-size: 14px; font-weight: 500;">Working from Home today</label>
+          </div>
+          
           <button type="submit" id="login-btn" class="primary-btn pulse-on-hover">Connect Securely</button>
           
           <p id="error-msg" class="error hidden"></p>

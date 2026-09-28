@@ -169,7 +169,7 @@ export async function getEmployeeById(id) {
           .map(([app, minutes]) => ({
             app,
             minutes,
-            category: appCategories[app] || 'neutral',
+            category: app === 'Idle' ? 'neutral' : (appCategories[app] || 'neutral'),
           }))
           .sort((a, b) => b.minutes - a.minutes);
           
@@ -408,7 +408,7 @@ export async function getEmployeeById(id) {
         const dailyAppCats = {};
         activeDailySummaries.forEach(s => {
           dailyAppMins[s.app_name] = (dailyAppMins[s.app_name] || 0) + (s.total_minutes || 0);
-          dailyAppCats[s.app_name] = s.category || 'productive';
+          dailyAppCats[s.app_name] = s.app_name === 'Idle' ? 'neutral' : (s.category || 'productive');
         });
 
         const dailyTotalMins = Object.values(dailyAppMins).reduce((a, b) => a + b, 0) || 1;
