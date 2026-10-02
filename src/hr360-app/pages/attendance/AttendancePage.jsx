@@ -69,6 +69,8 @@ export default function AttendancePage() {
   const [newCheckOut, setNewCheckOut] = useState('');
   const [newExpectedStart, setNewExpectedStart] = useState('');
   const [newExpectedEnd, setNewExpectedEnd] = useState('');
+  const [newDailyStart, setNewDailyStart] = useState('');
+  const [newDailyEnd, setNewDailyEnd] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   if (isLoading) return <PageContainer><SkeletonDashboard /></PageContainer>;
@@ -79,8 +81,10 @@ export default function AttendancePage() {
     setNewStatus(record.status);
     setNewCheckIn(record.checkIn && record.checkIn !== '—' && !record.isAutoRecoveredCheckIn ? record.checkIn : '');
     setNewCheckOut(record.checkOut && record.checkOut !== '—' && !record.isAutoRecoveredCheckOut ? record.checkOut : '');
-    setNewExpectedStart(record.expectedShiftStart || '');
-    setNewExpectedEnd(record.expectedShiftEnd || '');
+    setNewExpectedStart(record.genericExpectedStart || '');
+    setNewExpectedEnd(record.genericExpectedEnd || '');
+    setNewDailyStart(record.dailyExpectedStart || '');
+    setNewDailyEnd(record.dailyExpectedEnd || '');
     setEditModalOpen(true);
   };
 
@@ -88,10 +92,10 @@ export default function AttendancePage() {
     if (!editingRecord) return;
     setIsSaving(true);
     try {
-      await updateAttendanceStatus(editingRecord.employeeId, editingRecord.date, newStatus, newCheckIn, newCheckOut);
+      await updateAttendanceStatus(editingRecord.employeeId, editingRecord.date, newStatus, newCheckIn, newCheckOut, newDailyStart, newDailyEnd);
       
       // Check if generic timing was modified
-      if (newExpectedStart !== editingRecord.expectedShiftStart || newExpectedEnd !== editingRecord.expectedShiftEnd) {
+      if (newExpectedStart !== editingRecord.genericExpectedStart || newExpectedEnd !== editingRecord.genericExpectedEnd) {
         const hStart = newExpectedStart || null;
         const hEnd = newExpectedEnd || null;
         await updateEmployee(editingRecord.employeeId, {
@@ -307,6 +311,36 @@ export default function AttendancePage() {
               </div>
             </div>
 
+            
+            <h4 style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--color-text-primary)' }}>Today's Shift (Override)</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Shift Start</label>
+                <input
+                  type="time"
+                  value={newDailyStart}
+                  onChange={(e) => setNewDailyStart(e.target.value)}
+                  style={{
+                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                    fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--color-text-primary)'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>Shift End</label>
+                <input
+                  type="time"
+                  value={newDailyEnd}
+                  onChange={(e) => setNewDailyEnd(e.target.value)}
+                  style={{
+                    padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                    fontSize: '13px', fontFamily: 'var(--font-sans)', color: 'var(--color-text-primary)'
+                  }}
+                />
+              </div>
+            </div>
             <h4 style={{ fontSize: '13px', margin: '0 0 8px 0', color: 'var(--color-text-primary)' }}>Generic Shift (All Days)</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

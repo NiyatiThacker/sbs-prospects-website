@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Clock, AppWindow, Bell, Shield, UserMinus, Trash } from 'lucide-react';
+import { Save, Clock, AppWindow, Bell, Shield, UserMinus, Trash, Database, Download, AlertTriangle } from 'lucide-react';
 import PageContainer from '@/hr360-app/components/shared/layout/PageContainer';
 import Card from '@/hr360-app/components/shared/ui/Card';
 import Button from '@/hr360-app/components/shared/ui/Button';
@@ -9,6 +9,7 @@ import { DEPARTMENTS } from '@/hr360-app/utils/constants';
 import { getSettings, updateSettings } from '@/hr360-app/services/settingsService';
 import { getAdmins, updateEmployee, deleteEmployee } from '@/hr360-app/services/employeeService';
 import toast from 'react-hot-toast';
+import { supabase } from '@/hr360-app/services/supabaseClient';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState(null);
@@ -19,6 +20,7 @@ export default function SettingsPage() {
   const [admins, setAdmins] = useState([]);
   const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [exportDepartment, setExportDepartment] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -75,6 +77,130 @@ export default function SettingsPage() {
     }
   };
 
+  
+  const handleExport7DaySummary = async () => {
+    setIsSubmitting(true);
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const dateStr = sevenDaysAgo.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+
+      // 1. Fetch all matching employees
+      let empQuery = supabase.from('employees').select('id, name, department').neq('role', 'Admin');
+      if (exportDepartment) {
+        empQuery = empQuery.eq('department', exportDepartment);
+      }
+      const { data: employees, error: empError } = await empQuery;
+      if (empError) throw empError;
+
+      if (!employees || employees.length === 0) {
+        toast.error("No employees found for this department.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Fetch attendance records for the last 7 days
+      const { data: records, error: recError } = await supabase
+        .from('attendance_records')
+        .select('*')
+        .gte('date', dateStr);
+      
+      if (recError) throw recError;
+
+      // 3. Format as CSV
+      let csvContent = "Employee,Department,Days Present,Days Late,Days Absent,Total Hours\n";
+
+      const computeMins = (checkIn, checkOut, dateStr) => {
+         if (!checkIn || !checkOut) return 0;
+         try {
+           const t1 = new Date(`${dateStr}T${checkIn}Z`).getTime();
+           const t2 = new Date(`${dateStr}T${checkOut}Z`).getTime();
+           const diffMins = (t2 - t1) / 60000;
+           return diffMins > 0 ? diffMins : 0;
+         } catch(e) { return 0; }
+      };
+
+      const summaryMap = {};
+      
+      // Initialize map with ALL valid employees so nobody is missing
+      employees.forEach(emp => {
+         summaryMap[emp.id] = { name: emp.name, dept: emp.department, present: 0, late: 0, absent: 0, totalMins: 0, recordsFound: 0 };
+      });
+
+      if (records) {
+        records.forEach(r => {
+          const empStat = summaryMap[r.employee_id];
+          if (!empStat) return; // Ignore if they don't match the department filter
+          
+          empStat.recordsFound += 1;
+          const mins = computeMins(r.check_in, r.check_out, r.date);
+          empStat.totalMins += mins;
+          
+          if (r.status === 'present' || r.status === 'wfh' || r.status === 'half_day') {
+            empStat.present += 1;
+          } else if (r.status === 'late') {
+            empStat.late += 1;
+          } else if (r.status === 'absent') {
+            empStat.absent += 1;
+          }
+        });
+      }
+
+      // Calculate missing days (out of 7) as absent
+      Object.values(summaryMap).sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+        const missingDays = 7 - s.recordsFound;
+        if (missingDays > 0) {
+           s.absent += missingDays;
+        }
+        const h = Math.floor(s.totalMins / 60);
+        const m = Math.round(s.totalMins % 60);
+        const hoursStr = `${h}h ${m}m`;
+        csvContent += `${s.name},${s.dept},${s.present},${s.late},${s.absent},${hoursStr}\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "7_Day_Attendance_Summary.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Summary exported successfully!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to export summary: " + e.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePurgeLogs = async () => {
+    if (!window.confirm("Are you absolutely sure you want to permanently delete all raw screen time logs older than 7 days? This action CANNOT be undone.")) return;
+    
+    setIsSubmitting(true);
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const isoString = sevenDaysAgo.toISOString();
+
+      const { error } = await supabase
+        .from('screentime_raw_logs')
+        .delete()
+        .lt('timestamp', isoString);
+
+      if (error) throw error;
+      toast.success("Old raw logs purged successfully!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to purge logs: " + e.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       await updateSettings(settings);
@@ -91,6 +217,7 @@ export default function SettingsPage() {
     { id: 'categories', label: 'App Categories', icon: <AppWindow size={18} /> },
     { id: 'alerts', label: 'Alert Thresholds', icon: <Bell size={18} /> },
     { id: 'admins', label: 'Admin Accounts', icon: <Shield size={18} /> },
+    { id: 'data', label: 'Data Management', icon: <Database size={18} /> },
   ];
 
   return (
@@ -358,7 +485,103 @@ export default function SettingsPage() {
             </Card>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          {activeSection === 'tracking' && (
+            <Card>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Desktop Tracking Policy</h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '16px' }}>
+                Select which departments should have their active windows and screen time tracked by the Desktop Agent. 
+                Departments not selected will only have their Check-In and Check-Out times logged.
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {DEPARTMENTS.map(dept => {
+                  const isTracked = settings?.trackedDepartments?.includes(dept);
+                  return (
+                    <label key={dept} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={!!isTracked}
+                        onChange={(e) => {
+                          const newTracked = e.target.checked 
+                            ? [...(settings.trackedDepartments || []), dept] 
+                            : (settings.trackedDepartments || []).filter(d => d !== dept);
+                          setSettings({ ...settings, trackedDepartments: newTracked });
+                        }}
+                      />
+                      <span style={{ fontSize: '14px', color: 'var(--color-text-primary)' }}>{dept}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+          
+          {activeSection === 'data' && (
+            <Card>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Database size={18} color="var(--color-brand)" /> Data Management
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '24px' }}>
+                Manage your database storage. It is highly recommended to purge raw screen time logs older than 7 days to prevent database bloat and keep the system lightning fast.
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg)' }}>
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: '14px', color: 'var(--color-text-primary)' }}>1. Export 7-Day Summary</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Download a CSV summary of all attendance and hours worked in the last 7 days. Do this before purging.</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <select
+                      value={exportDepartment}
+                      onChange={(e) => setExportDepartment(e.target.value)}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--color-border)',
+                        background: 'var(--color-surface)',
+                        fontSize: '13px',
+                        fontFamily: 'var(--font-sans)',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    >
+                      <option value="">All Departments</option>
+                      {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <Button 
+                      variant="secondary" 
+                      disabled={isSubmitting} 
+                      onClick={handleExport7DaySummary}
+                      style={{ display: 'flex', gap: '6px', alignItems: 'center' }}
+                    >
+                      <Download size={16} /> Export CSV
+                    </Button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.02)' }}>
+                  <div>
+                    <div style={{ fontWeight: 500, fontSize: '14px', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={14} /> 2. Purge Old Raw Logs
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Permanently delete all raw window tracking data older than 7 days. This will NOT delete attendance summaries.</div>
+                  </div>
+                  <Button 
+                    variant="danger" 
+                    disabled={isSubmitting} 
+                    onClick={handlePurgeLogs}
+                    style={{ display: 'flex', gap: '6px', alignItems: 'center' }}
+                  >
+                    <Trash size={16} /> Purge Now
+                  </Button>
+                </div>
+
+              </div>
+            </Card>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
             <Button onClick={handleSave} icon={<Save size={16} />}>Save Settings</Button>
           </div>
         </div>

@@ -16,7 +16,9 @@ export async function getNotifications() {
     if (error) throw error;
     
     // Map to camelCase for the frontend
-    return (data || []).map(n => ({
+    return (data || [])
+      .filter(n => !n.title.startsWith('[broadcast:'))
+      .map(n => ({
       id: n.id,
       type: n.type,
       title: n.title,

@@ -20,7 +20,7 @@ export async function getAttendance(filters = {}) {
       // 2. Fetch attendance records for targetDate
       let query = supabase
         .from('attendance_records')
-        .select(`id, employee_id, date, status, check_in, check_out`)
+        .select(`id, employee_id, date, status, check_in, check_out, expected_shift_start, expected_shift_end`)
         .eq('date', targetDate);
 
       // (If filters.status is set, we will filter it in JS so we don't drop absent people before classifying them)
@@ -73,8 +73,30 @@ export async function getAttendance(filters = {}) {
             status: displayStatus,
             checkIn: formatIST(record.check_in),
             checkOut: isActive ? null : formatIST(record.check_out),
-            expectedShiftStart: emp.expected_shift_start ? emp.expected_shift_start.slice(0, 5) : '09:00',
-            expectedShiftEnd: emp.expected_shift_end ? emp.expected_shift_end.slice(0, 5) : '18:00',
+            // Process daily overrides
+            ...(() => {
+              let dStart = record?.expected_shift_start ? record.expected_shift_start.slice(0, 5) : null;
+              let dEnd = record?.expected_shift_end ? record.expected_shift_end.slice(0, 5) : null;
+              const gStart = emp.expected_shift_start ? emp.expected_shift_start.slice(0, 5) : null;
+              const gEnd = emp.expected_shift_end ? emp.expected_shift_end.slice(0, 5) : null;
+
+              // Automatic 9-hour calculation if daily start is set but daily end is kept null
+              let actualDailyEndForLogic = dEnd;
+              if (dStart && !dEnd) {
+                let [h, m] = dStart.split(':').map(Number);
+                h = (h + 9) % 24;
+                actualDailyEndForLogic = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+              }
+
+              return {
+                expectedShiftStart: dStart || gStart || '09:00',
+                expectedShiftEnd: actualDailyEndForLogic || gEnd || '18:00',
+                dailyExpectedStart: dStart,
+                dailyExpectedEnd: actualDailyEndForLogic,
+                genericExpectedStart: gStart,
+                genericExpectedEnd: gEnd
+              };
+            })(),
             isActive,
           });
         } else {
@@ -87,15 +109,37 @@ export async function getAttendance(filters = {}) {
             status: 'absent',
             checkIn: null,
             checkOut: null,
-            expectedShiftStart: emp.expected_shift_start ? emp.expected_shift_start.slice(0, 5) : '09:00',
-            expectedShiftEnd: emp.expected_shift_end ? emp.expected_shift_end.slice(0, 5) : '18:00',
+            // Process daily overrides
+            ...(() => {
+              let dStart = record?.expected_shift_start ? record.expected_shift_start.slice(0, 5) : null;
+              let dEnd = record?.expected_shift_end ? record.expected_shift_end.slice(0, 5) : null;
+              const gStart = emp.expected_shift_start ? emp.expected_shift_start.slice(0, 5) : null;
+              const gEnd = emp.expected_shift_end ? emp.expected_shift_end.slice(0, 5) : null;
+
+              // Automatic 9-hour calculation if daily start is set but daily end is kept null
+              let actualDailyEndForLogic = dEnd;
+              if (dStart && !dEnd) {
+                let [h, m] = dStart.split(':').map(Number);
+                h = (h + 9) % 24;
+                actualDailyEndForLogic = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+              }
+
+              return {
+                expectedShiftStart: dStart || gStart || '09:00',
+                expectedShiftEnd: actualDailyEndForLogic || gEnd || '18:00',
+                dailyExpectedStart: dStart,
+                dailyExpectedEnd: actualDailyEndForLogic,
+                genericExpectedStart: gStart,
+                genericExpectedEnd: gEnd
+              };
+            })(),
             isActive,
           });
         }
       }
 
       // Apply status filter if present
-      if (filters.status) {
+      if (false) {
         results = results.filter(r => r.status === filters.status);
       }
 
@@ -150,6 +194,15 @@ export async function getAttendance(filters = {}) {
 
       // Format remaining nulls to '—'
       results.forEach(r => {
+        // Auto-late logic
+        if (r.checkIn && r.checkIn !== '—' && r.expectedShiftStart) {
+          if (r.checkIn > r.expectedShiftStart && (r.status === 'present' || r.status === 'wfh' || r.status === 'half_day')) {
+            r.status = 'late';
+          } else if (r.checkIn <= r.expectedShiftStart && r.status === 'late') {
+            r.status = 'present';
+          }
+        }
+
         if (!r.checkIn) r.checkIn = '—';
         if (!r.checkOut) r.checkOut = '—';
       });
@@ -170,6 +223,13 @@ export async function getAttendance(filters = {}) {
         // if same status, sort alphabetically by name
         return (a.employeeName || '').localeCompare(b.employeeName || '');
       });
+
+
+
+      // Apply status filter if present
+      if (filters.status) {
+        results = results.filter(r => r.status === filters.status);
+      }
 
       return results;
     } catch (err) {
@@ -230,7 +290,7 @@ export async function getAttendance(filters = {}) {
   };
 }
 
-export async function updateAttendanceStatus(employeeId, date, status, checkInIST, checkOutIST) {
+export async function updateAttendanceStatus(employeeId, date, status, checkInIST, checkOutIST, dailyExpectedStart, dailyExpectedEnd) {
   if (isSupabaseConfigured) {
     try {
       const convertIstToUtcTime = (istTimeStr) => {
@@ -250,6 +310,8 @@ export async function updateAttendanceStatus(employeeId, date, status, checkInIS
       const updatePayload = { status };
       if (check_in !== undefined) updatePayload.check_in = check_in;
       if (check_out !== undefined) updatePayload.check_out = check_out;
+      if (dailyExpectedStart !== undefined) updatePayload.expected_shift_start = dailyExpectedStart ? (dailyExpectedStart.length === 5 ? dailyExpectedStart + ":00" : dailyExpectedStart) : null;
+      if (dailyExpectedEnd !== undefined) updatePayload.expected_shift_end = dailyExpectedEnd ? (dailyExpectedEnd.length === 5 ? dailyExpectedEnd + ":00" : dailyExpectedEnd) : null;
 
       // Check if record exists
       const { data: existing } = await supabase
@@ -276,7 +338,9 @@ export async function updateAttendanceStatus(employeeId, date, status, checkInIS
           date, 
           status, 
           check_in: check_in || null, 
-          check_out: check_out || null 
+          check_out: check_out || null,
+          expected_shift_start: dailyExpectedStart ? (dailyExpectedStart.length === 5 ? dailyExpectedStart + ":00" : dailyExpectedStart) : null,
+          expected_shift_end: dailyExpectedEnd ? (dailyExpectedEnd.length === 5 ? dailyExpectedEnd + ":00" : dailyExpectedEnd) : null
         };
         const { data, error } = await supabase
           .from('attendance_records')

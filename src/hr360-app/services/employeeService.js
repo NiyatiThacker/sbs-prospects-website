@@ -537,19 +537,23 @@ export async function deleteEmployee(employeeId) {
 }
 
 export async function updateEmployee(employeeId, updates) {
-  try {
-    const response = await fetch(`/api/employees`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: employeeId, ...updates }),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to update employee');
-    return result;
-  } catch (error) {
-    console.error('Error updating employee:', error.message);
-    throw error;
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .update(updates)
+        .eq('id', employeeId)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('[Supabase] Error updating employee:', error.message);
+      throw error;
+    }
   }
+  throw new Error('Supabase not configured');
 }
 
 export async function getAdmins() {

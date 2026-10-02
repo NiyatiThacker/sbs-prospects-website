@@ -13,6 +13,7 @@ const ApplicationsPage = lazy(() => import('@/hr360-app/pages/applications/Appli
 const ReportsPage = lazy(() => import('@/hr360-app/pages/reports/ReportsPage'));
 const SettingsPage = lazy(() => import('@/hr360-app/pages/settings/SettingsPage'));
 const NotificationsPage = lazy(() => import('@/hr360-app/pages/notifications/NotificationsPage'));
+const BroadcastsPage = lazy(() => import('@/hr360-app/pages/broadcasts/BroadcastsPage'));
 const ProjectsPage = lazy(() => import('@/hr360-app/pages/projects/ProjectsPage'));
 const IssuesPage = lazy(() => import('@/hr360-app/pages/issues/IssuesPage'));
 const LeaveRequestsPage = lazy(() => import('@/hr360-app/pages/leave/LeaveRequestsPage'));
@@ -88,6 +89,7 @@ export const router = createBrowserRouter([
       { path: 'issues', element: <AdminRoute>{withSuspense(IssuesPage)}</AdminRoute> },
       { path: 'settings', element: withSuspense(SettingsPage) },
       { path: 'notifications', element: withSuspense(NotificationsPage) },
+      { path: 'broadcasts', element: <AdminRoute>{withSuspense(BroadcastsPage)}</AdminRoute> },
     ],
   },
 ], {

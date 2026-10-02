@@ -13,7 +13,7 @@ export async function getLeaveRequests() {
     if (error) throw error;
     return data || [];
   } catch (err) {
-    console.error('[Supabase] Error fetching leave requests:', err);
+    console.error('[Supabase] Error fetching leave requests:', err?.message || err?.code || JSON.stringify(err) || String(err));
     return [];
   }
 }

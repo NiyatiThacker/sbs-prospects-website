@@ -5,13 +5,8 @@ let currentEmployeeId = null;
 let currentEmployeeName = null;
 let dataPollInterval = null;
 let knownProjectIds = new Set();
-
-// --- BREAK LOGIC VARIABLES ---
-let isOnBreak = false;
-let breakAllowanceSeconds = 60 * 60; // 60 minutes
-let breakCountdownInterval = null;
-let breakHeartbeatInterval = null;
-let hasGivenWarning = false;
+let isTrackingEnabled = true;
+let lastBroadcastCheck = new Date().toISOString();
 
 // --- TOAST NOTIFICATIONS ---
 window.showToast = (message, type = 'info') => {
@@ -38,6 +33,32 @@ window.showToast = (message, type = 'info') => {
   }, 3000);
 };
 
+
+async function registerDailyCheckIn(employeeId, isWfh) {
+  if (!employeeId) return;
+  try {
+    const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const { data: existingRecord } = await supabaseClient
+      .from('attendance_records')
+      .select('id')
+      .eq('employee_id', employeeId)
+      .eq('date', todayDate)
+      .maybeSingle();
+
+    if (!existingRecord) {
+      await supabaseClient.from('attendance_records').insert({
+        employee_id: employeeId,
+        date: todayDate,
+        status: isWfh ? 'wfh' : 'present',
+        check_in: new Date().toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: false })
+      });
+      console.log(`Logged ${isWfh ? 'WFH' : 'Present'} for today.`);
+    }
+  } catch (err) {
+    console.warn("Failed to set attendance status", err);
+  }
+}
+
 async function init() {
   try {
     // 1. Get Supabase Config from Rust Backend (which reads .env)
@@ -45,11 +66,7 @@ async function init() {
     supabaseClient = window.supabase.createClient(config.url, config.key);
 
     // 2. Check if we already logged in previously
-    const savedEmployeeId = await invoke("get_saved_employee_id");
-    if (savedEmployeeId) {
-      showSuccessScreen(savedEmployeeId, savedEmployeeId);
-      await invoke("start_monitoring_with_credentials", { employeeId: savedEmployeeId });
-    }
+    // auto login disabled
   } catch (err) {
     console.error("Failed to initialize:", err);
   }
@@ -79,7 +96,7 @@ async function handleLogin(e) {
     const userEmail = authData.user.email;
     const { data: empData, error: empError } = await supabaseClient
       .from('employees')
-      .select('id, name')
+      .select('id, name, department')
       .eq('email', userEmail)
       .single();
 
@@ -106,7 +123,7 @@ async function handleLogin(e) {
             employee_id: employeeId,
             date: todayDate,
             status: 'wfh',
-            check_in: new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })
+            check_in: new Date().toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: false })
           });
           console.log("Logged WFH for today.");
         }
@@ -116,9 +133,14 @@ async function handleLogin(e) {
     }
 
     // 4. Start monitoring via Rust Backend
-    await invoke("start_monitoring_with_credentials", { employeeId });
+    if (empData?.department !== 'Marketing') {
+      await invoke("start_monitoring_with_credentials", { employeeId });
+    } else {
+      console.log('Marketing department: Tracking disabled.');
+    }
 
     // 5. Show success & fetch HR documents
+    sessionStorage.setItem('savedEmployeeId', employeeId);
     showSuccessScreen(empData?.name || userEmail || employeeId, employeeId);
   } catch (err) {
     errorMsg.textContent = err.message || "Invalid credentials.";
@@ -144,6 +166,7 @@ function showSuccessScreen(userLabel, empId) {
   if (currentEmployeeId) {
     fetchAndDisplayDocuments(currentEmployeeId);
     fetchAndDisplayProjects(currentEmployeeId);
+    fetchAndDisplayAlerts(currentEmployeeId);
     
     // Set up polling for real-time updates every 10 seconds (matches HR dashboard)
     if (dataPollInterval) clearInterval(dataPollInterval);
@@ -153,12 +176,41 @@ function showSuccessScreen(userLabel, empId) {
         fetchAndDisplayProjects(currentEmployeeId);
         fetchAndDisplayLeaves(currentEmployeeId);
         checkAdminForcedCheckout(currentEmployeeId);
+        checkBroadcasts(currentEmployeeId);
+        fetchAndDisplayAlerts(currentEmployeeId);
+        checkBroadcasts(currentEmployeeId);
+        fetchAndDisplayAlerts(currentEmployeeId);
       }
     }, 10000);
 
     fetchAndDisplayLeaves(currentEmployeeId);
-    syncBreakAllowance(currentEmployeeId);
     checkAdminForcedCheckout(currentEmployeeId);
+  }
+}
+
+
+async function checkMissingCheckouts(employeeId) {
+  if (isTrackingEnabled || !supabaseClient || !employeeId) return;
+  try {
+    const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const { data: lastRecord, error } = await supabaseClient
+      .from('attendance_records')
+      .select('date, check_out, status')
+      .eq('employee_id', employeeId)
+      .lt('date', todayDate)
+      .order('date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!error && lastRecord) {
+      if (!lastRecord.check_out && (lastRecord.status === 'present' || lastRecord.status === 'wfh')) {
+        setTimeout(() => {
+          window.showToast(`⚠️ You forgot to Check Out on ${lastRecord.date}. Please submit an Issue to HR to correct your timesheet.`, 'error');
+        }, 2000); // Small delay so they see it after the login success UI
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to check for missing checkouts", err);
   }
 }
 
@@ -254,6 +306,80 @@ async function syncBreakAllowance(employeeId) {
     }
   } catch (e) {
     console.error("Error syncing break allowance", e);
+  }
+}
+
+
+async function checkBroadcasts(employeeId) {
+  if (!supabaseClient || !employeeId) return;
+  try {
+    const { data: empData } = await supabaseClient
+      .from('employees')
+      .select('department')
+      .eq('id', employeeId)
+      .single();
+      
+    const { data: broadcasts, error } = await supabaseClient
+      .from('notifications')
+      .select('*')
+      .eq('type', 'info')
+      .like('title', '[broadcast:%')
+      .gt('created_at', lastBroadcastCheck)
+      .order('created_at', { ascending: true });
+      
+    if (error) throw error;
+    
+    if (broadcasts && broadcasts.length > 0) {
+      // Update check time to the latest broadcast's time
+      lastBroadcastCheck = broadcasts[broadcasts.length - 1].created_at;
+      
+      broadcasts.forEach(b => {
+        const match = b.title.match(/^\[(broadcast:[^\]]+)\]\s*(.*)$/);
+        if (!match) return;
+        const typeStr = match[1];
+        const actualTitle = match[2];
+        let shouldShow = false;
+        
+        if (typeStr === 'broadcast:all') {
+          shouldShow = true;
+        } else if (typeStr.startsWith('broadcast:dept:')) {
+          const dept = typeStr.split(':')[2];
+          if (empData && empData.department === dept) shouldShow = true;
+        } else if (typeStr.startsWith('broadcast:emp:')) {
+          const empList = typeStr.split(':')[2].split(',').map(e => e.trim().toLowerCase());
+          if (empList.includes(employeeId.toString().toLowerCase())) shouldShow = true;
+        }
+        
+        if (shouldShow) {
+          // Play sound and show toast
+          try {
+            // Optional beep
+            new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU").play().catch(e => {});
+          } catch(e) {}
+          
+          window.showToast(`🔔 ${actualTitle}: ${b.message}`, "info");
+          const badge = document.getElementById("alerts-badge");
+          if (badge) badge.classList.remove("hidden");
+          console.log("Broadcast received:", actualTitle);
+          // Trigger actual OS Notification so it shows up even when minimized
+          try {
+            if ("Notification" in window) {
+              if (Notification.permission === "granted") {
+                new Notification(actualTitle, { body: b.message });
+              } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                  if (permission === "granted") {
+                    new Notification(actualTitle, { body: b.message });
+                  }
+                });
+              }
+            }
+          } catch(e) {}
+        }
+      });
+    }
+  } catch (err) {
+    console.error("Failed to check broadcasts", err);
   }
 }
 
@@ -690,101 +816,6 @@ window.requestProjectExtension = (id) => {
 };
 
 
-// --- BREAK LOGIC ---
-async function toggleBreak() {
-  const btn = document.getElementById("break-btn");
-  const timerDisplay = document.getElementById("break-timer-display");
-  const badge = document.getElementById("session-status-badge");
-
-  if (isOnBreak) {
-    // END BREAK
-    isOnBreak = false;
-    clearInterval(breakCountdownInterval);
-    clearInterval(breakHeartbeatInterval);
-    hasGivenWarning = false;
-
-    // Resume Rust monitor
-    if (currentEmployeeId) {
-      await invoke("resume_monitoring", { employeeId: currentEmployeeId });
-    }
-
-    btn.textContent = "Take Break";
-    btn.classList.remove("btn-danger");
-    btn.classList.add("btn-outline");
-    timerDisplay.classList.add("hidden");
-    
-    if (badge) badge.innerHTML = '<span class="status-dot"></span> Active Session';
-    
-    window.showToast("Break ended. Activity tracking resumed.", "success");
-    
-  } else {
-    // Always sync from server before starting a break to handle day rollovers or cross-device usage
-    btn.textContent = "Checking...";
-    await syncBreakAllowance(currentEmployeeId);
-    
-    if (breakAllowanceSeconds <= 0) {
-      btn.textContent = "Take Break";
-      window.showToast("Break allowance for today has been exhausted.", "error");
-      return;
-    }
-    
-    isOnBreak = true;
-    hasGivenWarning = false;
-
-    // Pause Rust monitor
-    await invoke("pause_monitoring");
-
-    btn.textContent = "End Break";
-    btn.classList.remove("btn-outline");
-    btn.classList.add("btn-danger");
-    timerDisplay.classList.remove("hidden");
-    
-    if (badge) badge.innerHTML = '<span class="status-dot" style="background:#F59E0B"></span> On Break';
-    
-    window.showToast("Break started. Activity tracking paused.", "info");
-
-    // Immediate heartbeat to update admin dash right away
-    sendBreakHeartbeat();
-
-    // 1. Send heartbeat every 30 seconds
-    breakHeartbeatInterval = setInterval(sendBreakHeartbeat, 30000);
-
-    // 2. Countdown timer every 1 second
-    breakCountdownInterval = setInterval(() => {
-      breakAllowanceSeconds--;
-      
-      const m = Math.floor(breakAllowanceSeconds / 60);
-      const s = breakAllowanceSeconds % 60;
-      timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
-
-      if (breakAllowanceSeconds === 300 && !hasGivenWarning) {
-        hasGivenWarning = true;
-        window.showToast("Your break ends in 5 minutes. Activity tracking will resume automatically.", "warning");
-      }
-
-      if (breakAllowanceSeconds <= 0) {
-        // Auto resume
-        toggleBreak(); 
-        window.showToast("Break allowance reached. Activity tracking auto-resumed.", "warning");
-      }
-    }, 1000);
-  }
-}
-
-async function sendBreakHeartbeat() {
-  if (!supabaseClient || !currentEmployeeId) return;
-  try {
-    await supabaseClient.rpc('log_screentime', {
-      p_employee_id: currentEmployeeId,
-      p_process_name: 'Break',
-      p_window_title: 'On Break',
-      p_duration_seconds: 30
-    });
-  } catch (err) {
-    console.error("Failed to send break heartbeat", err);
-  }
-}
-
 // --- TAB SWITCHING ---
 function handleTabClick(e) {
   const btn = e.currentTarget;
@@ -805,7 +836,18 @@ function handleTabClick(e) {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  init();
+  init().then(async () => {
+    const saved = sessionStorage.getItem('savedEmployeeId');
+    if (saved) {
+      currentEmployeeId = saved;
+      const { data } = await supabaseClient.from('employees').select('name').eq('id', saved).maybeSingle();
+      if (data) {
+        showSuccessScreen(data.name, saved);
+      } else {
+        showSuccessScreen(saved, saved);
+      }
+    }
+  });
   
   // Attach tab listeners
   document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -817,8 +859,6 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("hide-btn").addEventListener("click", () => {
     invoke("hide_window");
   });
-
-  document.getElementById("break-btn")?.addEventListener("click", toggleBreak);
 
   document.getElementById("refresh-docs-btn")?.addEventListener("click", () => {
     if (currentEmployeeId) fetchAndDisplayDocuments(currentEmployeeId);
@@ -944,3 +984,71 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+
+
+async function fetchAndDisplayAlerts(employeeId) {
+  if (!supabaseClient || !employeeId) return;
+  try {
+    const { data: empData } = await supabaseClient
+      .from('employees')
+      .select('department')
+      .eq('id', employeeId)
+      .single();
+      
+    const { data: alerts, error } = await supabaseClient
+      .from('notifications')
+      .select('*')
+      .eq('type', 'info')
+      .like('title', '[broadcast:%')
+      .order('created_at', { ascending: false })
+      .limit(20);
+      
+    if (error) throw error;
+    
+    const list = document.getElementById("notifications-list");
+    if (!list) return;
+    
+    if (!alerts || alerts.length === 0) {
+      list.innerHTML = '<p class="empty-msg">No alerts found.</p>';
+      return;
+    }
+    
+    let html = '';
+    alerts.forEach(b => {
+      const match = b.title.match(/^\[(broadcast:[^\]]+)\]\s*(.*)$/);
+      if (!match) return;
+      const typeStr = match[1];
+      const actualTitle = match[2];
+      let shouldShow = false;
+      
+      if (typeStr === 'broadcast:all') {
+        shouldShow = true;
+      } else if (typeStr.startsWith('broadcast:dept:')) {
+        const dept = typeStr.split(':')[2];
+        if (empData && empData.department === dept) shouldShow = true;
+      } else if (typeStr.startsWith('broadcast:emp:')) {
+        const empList = typeStr.split(':')[2].split(',').map(e => e.trim().toLowerCase());
+        if (empList.includes(employeeId.toString().toLowerCase())) shouldShow = true;
+      }
+      
+      if (shouldShow) {
+        html += `
+          <div style="border-left: 4px solid var(--color-primary); background: rgba(0,0,0,0.2); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 1px 3px rgba(0,0,0,0.2); margin-bottom: 12px;">
+            <div style="font-weight: 600; color: var(--color-text); font-size: 14px;">${actualTitle}</div>
+            <div style="font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; line-height: 1.4;">${b.message}</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">${new Date(b.created_at).toLocaleString()}</div>
+          </div>
+        `;
+      }
+    });
+    
+    if (html === '') {
+      list.innerHTML = '<p class="empty-msg">No alerts found.</p>';
+    } else {
+      list.innerHTML = html;
+    }
+  } catch (err) {
+    console.error("Failed to fetch alerts", err);
+  }
+}

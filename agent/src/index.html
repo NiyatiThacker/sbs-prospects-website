@@ -114,9 +114,7 @@
             </div>
           </div>
           <div style="display: flex; gap: 12px; align-items: center;">
-            <button id="break-btn" class="btn btn-outline btn-sm" style="padding: 4px 10px; font-size: 12px;">Take Break</button>
-            <span id="break-timer-display" class="hidden" style="font-weight: 600; font-size: 13px; color: #F59E0B;"></span>
-          <button id="hide-btn" class="icon-btn-ghost" title="Minimize to Tray">
+            <button id="hide-btn" class="icon-btn-ghost" title="Minimize to Tray">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>
           </button>
           </div>
@@ -140,6 +138,12 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             System
           </button>
+
+          <button class="tab-btn" data-target="tab-notifications" id="nav-alerts-btn" style="position: relative;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            Alerts
+            <span id="alerts-badge" class="hidden" style="position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background: #f43f5e; border-radius: 50%;"></span>
+          </button>
           <button class="tab-btn" data-target="tab-leave">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21H3"/><path d="M10 8a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M14 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/></svg>
             Leave
@@ -149,6 +153,19 @@
         <!-- Tab Contents -->
         <div class="tab-content-container">
           
+
+          <!-- NOTIFICATIONS TAB -->
+          <div id="tab-notifications" class="tab-pane hidden">
+            <div class="tab-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h3 style="margin: 0;">My Notifications</h3>
+              <button class="icon-btn" id="refresh-notifications-btn" title="Refresh" style="background: transparent; border: none; color: var(--color-text-secondary); cursor: pointer; padding: 4px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              </button>
+            </div>
+            <div id="notifications-list" class="scroll-container" style="max-height: 380px; overflow-y: auto; padding-right: 8px;">
+              <p class="empty-msg">No notifications found.</p>
+            </div>
+          </div>
           <!-- TASKS TAB -->
           <div id="tab-tasks" class="tab-pane active fade-in">
             <div class="section-header">

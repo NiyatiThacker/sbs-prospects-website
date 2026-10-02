@@ -50,6 +50,7 @@ const NAV_ITEMS = [
   { path: '/leave-requests', label: 'Leave Requests', icon: 'Palmtree', roles: ['Admin'] },
   { path: '/reports', label: 'Reports', icon: 'FileBarChart', roles: ['Admin'] },
   { path: '/issues', label: 'Reported Issues', icon: 'AlertTriangle', roles: ['Admin'] },
+  { path: '/broadcasts', label: 'Broadcasts', icon: 'Megaphone', roles: ['Admin'] },
 ];
 
 const NAV_BOTTOM = [
