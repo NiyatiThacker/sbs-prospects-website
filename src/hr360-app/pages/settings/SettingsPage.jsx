@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Clock, AppWindow, Bell, Shield, UserMinus, Trash, Database, Download, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Save, Clock, AppWindow, Bell, Shield, UserMinus, Trash, Database, Download, AlertTriangle, } from 'lucide-react';
 import PageContainer from '@/hr360-app/components/shared/layout/PageContainer';
 import Card from '@/hr360-app/components/shared/ui/Card';
 import Button from '@/hr360-app/components/shared/ui/Button';
@@ -226,12 +226,12 @@ export default function SettingsPage() {
     { id: 'alerts', label: 'Alert Thresholds', icon: <Bell size={18} /> },
     { id: 'admins', label: 'Admin Accounts', icon: <Shield size={18} /> },
     { id: 'data', label: 'Data Management', icon: <Database size={18} /> },
-    { id: 'tracking', label: 'Tracking Config', icon: <Eye size={18} /> },
+    { id: 'tracking', label: 'Tracking Config', icon: <AppWindow size={18} /> },
   ];
 
   return (
     <PageContainer>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
         {/* Settings nav */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
             {sections.map(s => (
@@ -240,7 +240,7 @@ export default function SettingsPage() {
                 onClick={() => setActiveSection(s.id)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  padding: '10px 20px', borderRadius: '40px', width: '180px',
+                  padding: '10px 16px', borderRadius: '40px', width: 'auto', minWidth: '150px',
                   background: activeSection === s.id ? 'var(--color-brand)' : 'var(--color-surface)',
                   color: activeSection === s.id ? '#FFFFFF' : 'var(--color-text-secondary)',
                   border: activeSection === s.id ? '1px solid var(--color-brand)' : '1px solid var(--color-border)',
@@ -572,7 +572,7 @@ export default function SettingsPage() {
                             }
                           }}
                         >
-                          {isEnabled ? <><EyeOff size={16} /> Disable Tracking</> : <><Eye size={16} /> Enable Tracking</>}
+                          {isEnabled ? <>Disable Tracking</> : <>Enable Tracking</>}
                         </Button>
                       </div>
                     );
