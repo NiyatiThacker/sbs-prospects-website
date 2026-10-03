@@ -40,13 +40,18 @@ export async function updateLeaveRequestStatus(id, newStatus, requestData = null
       
       while (currentDate <= endDate) {
         const dateStr = currentDate.toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
-        attendanceRecords.push({
-          employee_id,
-          date: dateStr,
-          status: 'on_leave',
-          check_in: null,
-          check_out: null
-        });
+        
+        // Skip weekends (0 = Sunday, 6 = Saturday)
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          attendanceRecords.push({
+            employee_id,
+            date: dateStr,
+            status: 'on_leave',
+            check_in: null,
+            check_out: null
+          });
+        }
         currentDate.setDate(currentDate.getDate() + 1);
       }
       
