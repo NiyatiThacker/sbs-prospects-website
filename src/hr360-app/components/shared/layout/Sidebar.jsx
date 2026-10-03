@@ -17,7 +17,8 @@ import {
   Briefcase,
   AlertTriangle,
   Globe,
-  Palmtree
+  Palmtree,
+  LogOut
 } from 'lucide-react';
 import { useMediaQuery } from '@/hr360-app/hooks/useMediaQuery';
 import { useAuth } from '@/hr360-app/context/AuthContext';
@@ -50,43 +51,31 @@ const NAV_ITEMS = [
   { path: '/leave-requests', label: 'Leave Requests', icon: 'Palmtree', roles: ['Admin'] },
   { path: '/reports', label: 'Reports', icon: 'FileBarChart', roles: ['Admin'] },
   { path: '/issues', label: 'Reported Issues', icon: 'AlertTriangle', roles: ['Admin'] },
-  { path: '/broadcasts', label: 'Broadcasts', icon: 'Megaphone', roles: ['Admin'] },
-];
-
-const NAV_BOTTOM = [
-  { path: '/settings', label: 'Settings', icon: 'Settings' },
-  { path: '/', label: 'Back to Website', icon: 'Globe', external: true },
+  { path: '/broadcasts', label: 'Broadcasts', icon: 'Bell', roles: ['Admin'] },
+  { path: '/settings', label: 'Settings', icon: 'Settings', roles: ['Admin'] },
+  { path: '/website', label: 'Back to Website', icon: 'Globe', roles: ['Admin', 'Employee'], external: true },
 ];
 
 export default function Sidebar({ collapsed, onToggle }) {
-  const location = useLocation();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const location = useLocation();
   const { user } = useAuth();
+  
   const [pendingLeavesCount, setPendingLeavesCount] = useState(0);
   const [pendingProjectsCount, setPendingProjectsCount] = useState(0);
 
   useEffect(() => {
     if (user?.role === 'Admin') {
       const fetchCounts = async () => {
-        const [reqs, projects] = await Promise.all([
-          getLeaveRequests(),
-          getProjects()
-        ]);
-        
-        const pendingLeaves = reqs.filter(r => r.status === 'pending');
-        setPendingLeavesCount(pendingLeaves.length);
-        
-        let pendingExt = 0;
-        projects.forEach(p => {
-          if (p.extension_requests && p.extension_requests.some(req => req.status === 'pending')) {
-            pendingExt++;
-          }
-        });
-        setPendingProjectsCount(pendingExt);
+        try {
+          const lReqs = await getLeaveRequests();
+          setPendingLeavesCount(lReqs.filter(r => r.status === 'pending').length);
+          const pReqs = await getProjects();
+          setPendingProjectsCount(pReqs.filter(r => r.status === 'pending').length);
+        } catch(e) {}
       };
-      
       fetchCounts();
-      const interval = setInterval(fetchCounts, 10000);
+      const interval = setInterval(fetchCounts, 60000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -110,7 +99,8 @@ export default function Sidebar({ collapsed, onToggle }) {
             style={{
               position: 'fixed',
               inset: 0,
-              background: 'rgba(0,0,0,0.4)',
+              background: 'rgba(15, 23, 42, 0.6)',
+              backdropFilter: 'blur(4px)',
               zIndex: 40,
             }}
           />
@@ -118,61 +108,64 @@ export default function Sidebar({ collapsed, onToggle }) {
       </AnimatePresence>
 
       <motion.aside
-        animate={{ width: isMobile && collapsed ? 0 : (collapsed ? 110 : 260) }}
+        animate={{ width: isMobile && collapsed ? 0 : (collapsed ? 80 : 280) }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         style={{
           position: isMobile ? 'fixed' : 'sticky',
           top: 0,
           left: 0,
           height: '100vh',
-          background: '#00B4D8', // Borcelle cyan blue
+          background: '#0F172A', // Sleek dark slate
+          borderRight: '1px solid rgba(255,255,255,0.05)',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          padding: '24px 0',
-          gap: '16px',
           zIndex: 50,
           flexShrink: 0,
+          overflow: 'hidden'
         }}
       >
-        {/* Logo Circle */}
-        <Link to="/" style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '50%',
-          background: '#0F1115',
+        {/* Brand Header */}
+        <div style={{
+          height: '80px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
-          textDecoration: 'none',
-          cursor: 'pointer'
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          padding: collapsed ? '0' : '0 24px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          flexShrink: 0
         }}>
-          <Activity size={28} color="#fff" />
-        </Link>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+            <div style={{
+              width: '36px', height: '36px', borderRadius: '10px',
+              background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+              flexShrink: 0
+            }}>
+              <Activity size={20} color="#fff" />
+            </div>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                  style={{ color: '#fff', fontSize: '18px', fontWeight: 700, letterSpacing: '-0.5px' }}
+                >
+                  HR360
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
+        </div>
 
-        {/* Nav Pill */}
-        <motion.div 
-          animate={{ 
-            width: collapsed ? 64 : 210,
-            alignItems: collapsed ? 'center' : 'stretch',
-            paddingLeft: collapsed ? 0 : 16,
-            paddingRight: collapsed ? 0 : 16,
-          }}
-          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-          style={{
-            flex: 1,
-            borderRadius: '40px',
-            background: '#FFFFFF',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '16px 0', // Reduced padding
-            gap: '8px',        // Reduced gap
-            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-            minHeight: 0,
-            overflowY: 'auto',
-            overflowX: 'hidden'
+        {/* Navigation Area */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '24px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
         }}>
           {NAV_ITEMS.filter(item => item.roles.includes(user?.role || 'Admin')).map((item) => {
             let badge = 0;
@@ -190,20 +183,31 @@ export default function Sidebar({ collapsed, onToggle }) {
               />
             );
           })}
+        </div>
 
-          <div style={{ flex: 1, minHeight: '12px' }} />
-
-          {NAV_BOTTOM.map((item) => (
-            <SidebarLink
-              key={item.path}
-              item={item}
-              active={isActive(item.path)}
-              onNavigate={isMobile ? onToggle : undefined}
-              collapsed={collapsed}
-            />
-          ))}
-
-        </motion.div>
+        {/* Footer Toggle */}
+        <div style={{
+          padding: '16px',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex',
+          justifyContent: collapsed ? 'center' : 'flex-end',
+          background: 'rgba(0,0,0,0.1)'
+        }}>
+          <button
+            onClick={onToggle}
+            style={{
+              width: '36px', height: '36px', borderRadius: '8px',
+              background: 'rgba(255,255,255,0.05)',
+              border: 'none', color: '#94A3B8',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#94A3B8'; }}
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
       </motion.aside>
     </>
   );
@@ -211,111 +215,79 @@ export default function Sidebar({ collapsed, onToggle }) {
 
 function SidebarLink({ item, active, onNavigate, collapsed, badge = 0 }) {
   const Icon = ICON_MAP[item.icon];
-  const [isHovered, setIsHovered] = useState(false);
-
   const Component = item.external ? 'a' : NavLink;
   const linkProps = item.external ? { href: item.path } : { to: item.path, onClick: onNavigate };
 
   return (
-    <div 
-      style={{ position: 'relative', flexShrink: 0 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <div style={{ position: 'relative' }}>
       <Component
         {...linkProps}
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'flex-start',
-          width: collapsed ? '40px' : '100%',
-          height: '40px',
+          width: '100%',
+          height: '44px',
           padding: collapsed ? '0' : '0 16px',
           gap: '12px',
-          borderRadius: collapsed ? '50%' : '20px',
-          color: active ? '#FFFFFF' : '#6B7280',
-          background: active ? '#00B4D8' : 'transparent',
+          borderRadius: '10px',
+          color: active ? '#FFFFFF' : '#94A3B8',
+          background: active ? 'linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%)' : 'transparent',
+          borderLeft: active ? '3px solid #6366F1' : '3px solid transparent',
           textDecoration: 'none',
           transition: 'all 0.2s',
           overflow: 'hidden'
         }}
         onMouseEnter={(e) => {
-          if (!active) e.currentTarget.style.color = '#111827';
+          if (!active) {
+            e.currentTarget.style.color = '#FFFFFF';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+          }
         }}
         onMouseLeave={(e) => {
-          if (!active) e.currentTarget.style.color = '#6B7280';
+          if (!active) {
+            e.currentTarget.style.color = '#94A3B8';
+            e.currentTarget.style.background = 'transparent';
+          }
         }}
       >
-        {Icon && <Icon size={20} style={{ flexShrink: 0 }} />}
+        {Icon && (
+          <Icon 
+            size={20} 
+            style={{ 
+              flexShrink: 0, 
+              color: active ? '#818CF8' : 'inherit',
+              transition: 'color 0.2s'
+            }} 
+          />
+        )}
         
         {badge > 0 && collapsed && (
           <div style={{
-            position: 'absolute',
-            top: '4px',
-            right: '4px',
-            width: '10px',
-            height: '10px',
-            background: 'var(--color-danger)',
-            borderRadius: '50%',
-            border: '2px solid white'
+            position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px',
+            background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 0 2px #0F172A'
           }} />
         )}
 
         <AnimatePresence>
           {!collapsed && (
             <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              exit={{ opacity: 0, width: 0 }}
-              style={{ whiteSpace: 'nowrap', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', flex: 1 }}
+              initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+              style={{ whiteSpace: 'nowrap', fontWeight: 500, fontSize: '14px', display: 'flex', alignItems: 'center', flex: 1 }}
             >
               <span style={{ flex: 1 }}>{item.label}</span>
               {badge > 0 && (
                 <span style={{
-                  background: 'var(--color-danger)',
-                  color: 'white',
-                  fontSize: '11px',
-                  fontWeight: 'bold',
-                  padding: '2px 6px',
-                  borderRadius: '10px',
-                  lineHeight: 1
+                  background: '#EF4444', color: 'white', fontSize: '11px', fontWeight: 'bold',
+                  padding: '2px 6px', borderRadius: '10px', minWidth: '20px', textAlign: 'center'
                 }}>
-                  {badge}
+                  {badge > 99 ? '99+' : badge}
                 </span>
               )}
             </motion.span>
           )}
         </AnimatePresence>
       </Component>
-
-      <AnimatePresence>
-        {isHovered && collapsed && (
-          <motion.div
-            initial={{ clipPath: 'inset(0 100% 0 0)', x: -20 }}
-            animate={{ clipPath: 'inset(0 0% 0 0)', x: 0 }}
-            exit={{ clipPath: 'inset(0 100% 0 0)', x: -20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            style={{
-              position: 'absolute',
-              left: '40px',
-              top: '50%',
-              y: '-50%',
-              background: '#FFFFFF',
-              color: '#111827',
-              padding: '8px 16px 8px 24px',
-              borderRadius: '0 24px 24px 0',
-              fontSize: '13px',
-              fontWeight: 600,
-              whiteSpace: 'nowrap',
-              zIndex: -1,
-              pointerEvents: 'none',
-              boxShadow: '4px 4px 12px rgba(0,0,0,0.1)'
-            }}
-          >
-            {item.label}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
