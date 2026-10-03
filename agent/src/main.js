@@ -108,29 +108,7 @@ async function handleLogin(e) {
 
     // 3. Handle WFH Checkbox
     const isWfh = document.getElementById("wfh-checkbox")?.checked;
-    if (isWfh && employeeId) {
-      try {
-        const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-        const { data: existingRecord } = await supabaseClient
-          .from('attendance_records')
-          .select('id')
-          .eq('employee_id', employeeId)
-          .eq('date', todayDate)
-          .maybeSingle();
-
-        if (!existingRecord) {
-          await supabaseClient.from('attendance_records').insert({
-            employee_id: employeeId,
-            date: todayDate,
-            status: 'wfh',
-            check_in: new Date().toLocaleTimeString('en-GB', { timeZone: 'UTC', hour12: false })
-          });
-          console.log("Logged WFH for today.");
-        }
-      } catch (wfhErr) {
-        console.warn("Failed to set WFH status", wfhErr);
-      }
-    }
+    await registerDailyCheckIn(employeeId, isWfh);
 
     // 4. Start monitoring via Rust Backend
     if (empData?.department !== 'Marketing') {
@@ -816,6 +794,102 @@ window.requestProjectExtension = (id) => {
 };
 
 
+// --- BREAK LOGIC ---
+async function toggleBreak() {
+  const btn = document.getElementById("break-btn");
+  const timerDisplay = document.getElementById("break-timer-display");
+  const badge = document.getElementById("session-status-badge");
+
+  if (isOnBreak) {
+    // END BREAK
+    isOnBreak = false;
+    clearInterval(breakCountdownInterval);
+    clearInterval(breakHeartbeatInterval);
+    hasGivenWarning = false;
+
+    // Resume Rust monitor
+    if (currentEmployeeId) {
+      await invoke("resume_monitoring", { employeeId: currentEmployeeId });
+    }
+
+    btn.textContent = "Take Break";
+    btn.classList.remove("btn-danger");
+    btn.classList.add("btn-outline");
+    timerDisplay.classList.add("hidden");
+    
+    if (badge) badge.innerHTML = '<span class="status-dot"></span> Active Session';
+    
+    window.showToast("Break ended. Activity tracking resumed.", "success");
+    
+  } else {
+    // Always sync from server before starting a break to handle day rollovers or cross-device usage
+    btn.textContent = "Checking...";
+    await syncBreakAllowance(currentEmployeeId);
+    
+    if (breakAllowanceSeconds <= 0) {
+      btn.textContent = "Take Break";
+      window.showToast("Break allowance for today has been exhausted.", "error");
+      return;
+    }
+    
+    isOnBreak = true;
+    hasGivenWarning = false;
+
+    // Pause Rust monitor
+    await invoke("pause_monitoring");
+
+    btn.textContent = "End Break";
+    btn.classList.remove("btn-outline");
+    btn.classList.add("btn-danger");
+    timerDisplay.classList.remove("hidden");
+    
+    if (badge) badge.innerHTML = '<span class="status-dot" style="background:#F59E0B"></span> On Break';
+    
+    window.showToast("Break started. Activity tracking paused.", "info");
+
+    // Immediate heartbeat to update admin dash right away
+    sendBreakHeartbeat();
+
+    // 1. Send heartbeat every 30 seconds
+    breakHeartbeatInterval = setInterval(sendBreakHeartbeat, 30000);
+
+    // 2. Countdown timer every 1 second
+    breakCountdownInterval = setInterval(() => {
+      breakAllowanceSeconds--;
+      
+      const m = Math.floor(breakAllowanceSeconds / 60);
+      const s = breakAllowanceSeconds % 60;
+      timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+
+      if (breakAllowanceSeconds === 300 && !hasGivenWarning) {
+        hasGivenWarning = true;
+        window.showToast("Your break ends in 5 minutes. Activity tracking will resume automatically.", "warning");
+      }
+
+      if (breakAllowanceSeconds <= 0) {
+        // Auto resume
+        toggleBreak(); 
+        window.showToast("Break allowance reached. Activity tracking auto-resumed.", "warning");
+      }
+    }, 1000);
+  }
+}
+
+async function sendBreakHeartbeat() {
+  if (!supabaseClient || !currentEmployeeId) return;
+  try {
+    await supabaseClient.rpc('log_screentime', {
+      p_employee_id: currentEmployeeId,
+      p_process_name: 'Break',
+      p_window_title: 'On Break',
+      p_duration_seconds: 30
+    });
+  } catch (err) {
+    console.error("Failed to send break heartbeat", err);
+  }
+}
+
+
 // --- TAB SWITCHING ---
 function handleTabClick(e) {
   const btn = e.currentTarget;
@@ -840,6 +914,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const saved = sessionStorage.getItem('savedEmployeeId');
     if (saved) {
       currentEmployeeId = saved;
+      await registerDailyCheckIn(saved, false);
       const { data } = await supabaseClient.from('employees').select('name').eq('id', saved).maybeSingle();
       if (data) {
         showSuccessScreen(data.name, saved);
@@ -859,6 +934,8 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("hide-btn").addEventListener("click", () => {
     invoke("hide_window");
   });
+
+  document.getElementById("break-btn")?.addEventListener("click", toggleBreak);
 
   document.getElementById("refresh-docs-btn")?.addEventListener("click", () => {
     if (currentEmployeeId) fetchAndDisplayDocuments(currentEmployeeId);
