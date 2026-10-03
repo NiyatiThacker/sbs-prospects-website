@@ -216,7 +216,12 @@ export default function BroadcastsPage() {
                     badgeText = `Dept: ${typeStr.split(':')[2]}`;
                     BadgeIcon = LayoutGrid;
                   } else if (typeStr.startsWith('broadcast:emp:')) {
-                    badgeText = `Specific Employees`;
+                    const ids = typeStr.split(':')[2].split(',');
+                    const names = ids.map(id => {
+                      const emp = employees.find(e => e.id.toLowerCase() === id.trim().toLowerCase());
+                      return emp ? emp.name.split(' ')[0] : 'Unknown';
+                    }).join(', ');
+                    badgeText = `Employees: ${names}`;
                     BadgeIcon = User;
                   }
 
