@@ -94,6 +94,12 @@ fn hide_window(window: tauri::Window) {
     let _ = window.hide();
 }
 
+#[tauri::command]
+fn show_notification(app: tauri::AppHandle, title: String, body: String) {
+    use tauri_plugin_notification::NotificationExt;
+    let _ = app.notification().builder().title(title).body(body).show();
+}
+
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, MouseButton, MouseButtonState, TrayIconEvent},
@@ -138,6 +144,7 @@ pub fn run() {
                 .build(app)?;
             Ok(())
         })
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
@@ -164,7 +171,8 @@ pub fn run() {
             pause_monitoring,
             resume_monitoring,
             get_saved_employee_id,
-            hide_window
+            hide_window,
+            show_notification
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
