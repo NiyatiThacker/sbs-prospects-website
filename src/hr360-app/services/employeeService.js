@@ -118,14 +118,14 @@ export async function getEmployees(filters = {}) {
           return {
             ...emp,
             status: (() => {
+              const todaySt = todayAttendanceStatus.get(emp.id) || 'absent';
               if (untrackedDepts.has(emp.department)) {
-                const todaySt = todayAttendanceStatus.get(emp.id);
-                if (['present', 'wfh', 'late', 'half_day'].includes(todaySt)) {
-                  return 'untracked';
-                }
-                return 'inactive';
+                if (['present', 'wfh', 'late', 'half_day'].includes(todaySt)) return 'untracked';
+                return todaySt;
               }
-              return activeEmployeeStatuses.has(emp.id) ? activeEmployeeStatuses.get(emp.id) : 'inactive';
+              if (activeEmployeeStatuses.has(emp.id)) return activeEmployeeStatuses.get(emp.id);
+              if (['on_leave', 'absent'].includes(todaySt)) return todaySt;
+              return 'inactive';
             })(),
             hoursWorked: hoursWorked || 0,
             hoursAllotted: adjustedHoursAllotted,
@@ -133,9 +133,22 @@ export async function getEmployees(filters = {}) {
           };
         });
 
+        const ORDER = {
+          active: 1,
+          untracked: 2,
+          present: 3,
+          wfh: 4,
+          late: 5,
+          half_day: 6,
+          on_break: 7,
+          inactive: 8,
+          on_leave: 9,
+          absent: 10
+        };
         return results.sort((a, b) => {
-          if (a.status === 'active' && b.status !== 'active') return -1;
-          if (a.status !== 'active' && b.status === 'active') return 1;
+          const rankA = ORDER[a.status] || 99;
+          const rankB = ORDER[b.status] || 99;
+          if (rankA !== rankB) return rankA - rankB;
           return (a.name || '').localeCompare(b.name || '');
         });
       }
