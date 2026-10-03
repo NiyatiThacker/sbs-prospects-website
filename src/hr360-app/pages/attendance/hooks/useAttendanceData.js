@@ -55,5 +55,6 @@ export default function useAttendanceData() {
     };
   }, [records, filters.date]);
 
-  return { records, summary, isLoading, error, filters, setFilters };
+  const refresh = () => setFilters({ ...filters });
+  return { records, summary, isLoading, error, filters, setFilters, refresh };
 }
