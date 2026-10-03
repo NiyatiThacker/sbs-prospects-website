@@ -437,6 +437,30 @@ export default function SettingsPage() {
                       size="sm" 
                       style={{ width: '100px', justifyContent: 'center', flexShrink: 0 }} 
                     />
+                    <button
+                      onClick={async () => {
+                        const confirmed = window.confirm(`Are you sure you want to stop tracking ${item.app}?`);
+                        if (!confirmed) return;
+                        const { error } = await supabase.from('app_classifications').delete().eq('display_name', item.app);
+                        if (error) {
+                          toast.error("Failed to delete application");
+                        } else {
+                          toast.success("Application removed successfully");
+                          const fresh = await getSettings();
+                          setSettings(fresh);
+                        }
+                      }}
+                      style={{
+                        background: 'transparent', border: 'none', color: 'var(--color-text-secondary)',
+                        cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        borderRadius: '4px'
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.color = 'var(--color-danger)'; e.currentTarget.style.background = 'var(--color-danger-light)'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; e.currentTarget.style.background = 'transparent'; }}
+                      title="Remove App"
+                    >
+                      <Trash size={16} />
+                    </button>
                   </div>
                 ))}
                 
