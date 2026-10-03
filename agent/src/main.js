@@ -813,7 +813,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (saved) {
       currentEmployeeId = saved;
       await registerDailyCheckIn(saved, false);
-      const { data } = await supabaseClient.from('employees').select('name').eq('id', saved).maybeSingle();
+      const { data } = await supabaseClient.from('employees').select('name, department').eq('id', saved).maybeSingle();
       if (data) {
         showSuccessScreen(data.name, saved, data.department);
       } else {
