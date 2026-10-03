@@ -57,7 +57,11 @@ export async function getSettings() {
         
         const appCategories = Object.entries(uniqueMap)
           .map(([app, category]) => ({ app, category }))
-          .sort((a, b) => a.app.localeCompare(b.app));
+          .sort((a, b) => {
+            if (a.category === 'neutral' && b.category !== 'neutral') return -1;
+            if (b.category === 'neutral' && a.category !== 'neutral') return 1;
+            return a.app.localeCompare(b.app);
+          });
         settingsState.appCategories = appCategories;
 
         return {

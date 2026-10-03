@@ -22,6 +22,8 @@ export default function SettingsPage() {
   const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [exportDepartment, setExportDepartment] = useState('');
+  const [newAppName, setNewAppName] = useState('');
+  const [newAppCategory, setNewAppCategory] = useState('productive');
 
   useEffect(() => {
     async function load() {
@@ -352,6 +354,54 @@ export default function SettingsPage() {
                   onChange={(e) => setSearchCategory(e.target.value)}
                   style={{ ...inputStyle, width: '250px', padding: '8px 12px' }}
                 />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', padding: '16px', background: 'var(--color-background)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>App or Window Title Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Figma, GitHub, Netflix..."
+                    value={newAppName}
+                    onChange={(e) => setNewAppName(e.target.value)}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div style={{ width: '150px' }}>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>Category</label>
+                  <select
+                    value={newAppCategory}
+                    onChange={(e) => setNewAppCategory(e.target.value)}
+                    style={{ ...inputStyle, width: '100%' }}
+                  >
+                    <option value="productive">Productive</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="distracting">Distracting</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <Button
+                    variant="primary"
+                    onClick={async () => {
+                      if (!newAppName.trim()) return;
+                      const { error } = await supabase.from('app_classifications').insert({
+                        process_name: newAppName.trim(),
+                        display_name: newAppName.trim(),
+                        category: newAppCategory
+                      });
+                      if (error) {
+                        toast.error("Failed to add application");
+                      } else {
+                        toast.success("Application added successfully");
+                        setNewAppName('');
+                        // Reload settings to show the new app
+                        const fresh = await getSettings();
+                        setSettings(fresh);
+                      }
+                    }}
+                  >
+                    + Add App
+                  </Button>
+                </div>
               </div>
               <div className="custom-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                 {settings.appCategories
