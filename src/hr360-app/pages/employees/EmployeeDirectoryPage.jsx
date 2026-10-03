@@ -133,11 +133,16 @@ export default function EmployeeDirectoryPage() {
       key: 'hoursWorked',
       label: 'Hours (Weekly)',
       render: (val, row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '140px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '140px' }}>
           <ProgressBar value={val} max={row.hoursAllotted} height={6} style={{ flex: 1 }} animated={false} />
           <span style={{ fontSize: '12px', fontWeight: 500, whiteSpace: 'nowrap' }}>
             {formatHours(val)}
           </span>
+          {val > row.hoursAllotted && (
+            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--color-success)', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '12px' }}>
+              +{formatHours(val - row.hoursAllotted)} OT
+            </span>
+          )}
         </div>
       ),
     },
