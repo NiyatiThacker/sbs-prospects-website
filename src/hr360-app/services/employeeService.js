@@ -45,7 +45,7 @@ export async function getEmployees(filters = {}) {
         // Fetch attendance strictly for this week
         const { data: attendance, error: attErr } = await supabase
           .from('attendance_records')
-          .select('employee_id, status')
+          .select('employee_id, status, date')
           .gte('date', startOfWeekStr)
           .lte('date', todayStr);
 
@@ -76,6 +76,14 @@ export async function getEmployees(filters = {}) {
           .select('employee_id, timestamp, window_title, process_name')
           .gte('timestamp', new Date(Date.now() - 90 * 1000).toISOString())
           .order('timestamp', { ascending: true });
+
+        const { data: deptSettings } = await supabase.from('department_settings').select('*');
+        const untrackedDepts = new Set((deptSettings || []).filter(d => d.is_tracking_enabled === false).map(d => d.department_name));
+
+        const todayAttendanceStatus = new Map();
+        attendance?.forEach(a => {
+          if (a.date === todayStr) todayAttendanceStatus.set(a.employee_id, a.status);
+        });
 
         const activeEmployeeStatuses = new Map();
         latestLogs?.forEach(l => {
@@ -109,7 +117,16 @@ export async function getEmployees(filters = {}) {
 
           return {
             ...emp,
-            status: activeEmployeeStatuses.has(emp.id) ? activeEmployeeStatuses.get(emp.id) : 'inactive',
+            status: (() => {
+              if (untrackedDepts.has(emp.department)) {
+                const todaySt = todayAttendanceStatus.get(emp.id);
+                if (['present', 'wfh', 'late', 'half_day'].includes(todaySt)) {
+                  return 'untracked';
+                }
+                return 'inactive';
+              }
+              return activeEmployeeStatuses.has(emp.id) ? activeEmployeeStatuses.get(emp.id) : 'inactive';
+            })(),
             hoursWorked: hoursWorked || 0,
             hoursAllotted: adjustedHoursAllotted,
             score,

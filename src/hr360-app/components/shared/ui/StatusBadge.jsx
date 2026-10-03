@@ -13,6 +13,7 @@ const STATUS_STYLES = {
   wfh: { bg: 'var(--color-info)', color: '#FFFFFF', label: 'WFH' },
   active: { bg: 'var(--color-success)', color: '#FFFFFF', label: 'Active' },
   inactive: { bg: 'var(--color-neutral)', color: '#FFFFFF', label: 'Inactive' },
+  untracked: { bg: '#94A3B8', color: '#FFFFFF', label: 'Present' },
   productive: { bg: 'var(--color-success)', color: '#FFFFFF', label: 'Productive' },
   neutral: { bg: 'var(--color-info)', color: '#FFFFFF', label: 'Neutral' },
   distracting: { bg: 'var(--color-warning)', color: '#FFFFFF', label: 'Distracting' },
