@@ -112,10 +112,31 @@ async function handleLogin(e) {
     await registerDailyCheckIn(employeeId, isWfh);
 
     // 4. Start monitoring via Rust Backend
-    if (empData?.department !== 'Marketing') {
-      await invoke("start_monitoring_with_credentials", { employeeId });
+    let shouldTrack = true;
+    if (empData?.department) {
+      const { data: deptSettings, error: dsErr } = await supabaseClient
+        .from('department_settings')
+        .select('is_tracking_enabled')
+        .eq('department_name', empData.department)
+        .maybeSingle();
+      if (!dsErr && deptSettings && deptSettings.is_tracking_enabled === false) {
+        shouldTrack = false;
+      }
+    }
+
+    if (shouldTrack) {
+      await invoke('start_monitoring_with_credentials', { employeeId });
     } else {
-      console.log('Marketing department: Tracking disabled.');
+      console.log(`${empData?.department || 'Unknown'} department: Tracking dynamically disabled.`);
+      const manualBtn = document.getElementById('manual-checkout-btn');
+      if (manualBtn) manualBtn.classList.remove('hidden');
+      const statusBadge = document.getElementById('session-status-badge');
+      if (statusBadge) {
+        statusBadge.innerHTML = '<span class="status-dot" style="background: #94a3b8; box-shadow: none;"></span> Untracked Session';
+        statusBadge.style.color = '#94a3b8';
+        statusBadge.style.background = 'rgba(148, 163, 184, 0.1)';
+        statusBadge.style.border = '1px solid rgba(148, 163, 184, 0.2)';
+      }
     }
 
     // 5. Show success & fetch HR documents
