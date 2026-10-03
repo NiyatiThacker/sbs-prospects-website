@@ -2,7 +2,7 @@ const { invoke } = window.__TAURI__.core;
 
 let supabaseClient = null;
 let currentEmployeeId = null;
-let currentEmployeeName = null;\nlet currentEmployeeDept = null;
+let currentEmployeeName = null;
 let currentEmployeeDept = null;
 let dataPollInterval = null;
 let knownProjectIds = new Set();
