@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PageContainer from '@/hr360-app/components/shared/layout/PageContainer';
 import Card from '@/hr360-app/components/shared/ui/Card';
 import Button from '@/hr360-app/components/shared/ui/Button';
-import { Send, Users, User, LayoutGrid } from 'lucide-react';
+import { Send, Users, User, LayoutGrid, Trash2, Clock, Globe } from 'lucide-react';
 import { supabase } from '@/hr360-app/services/supabaseClient';
 import { DEPARTMENTS } from '@/hr360-app/utils/constants';
 import toast from 'react-hot-toast';
@@ -16,9 +16,26 @@ export default function BroadcastsPage() {
   const [selectedDept, setSelectedDept] = useState(DEPARTMENTS[0]);
   const [selectedEmps, setSelectedEmps] = useState([]); // array of employee IDs
   const [isSending, setIsSending] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  const fetchHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .like('title', '[broadcast:%')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      setHistory(data || []);
+    } catch (err) {
+      console.error("Failed to fetch broadcast history", err);
+    }
+  };
 
   useEffect(() => {
     getEmployees().then(data => setEmployees(data));
+    fetchHistory();
   }, []);
 
   const handleSend = async () => {
@@ -53,6 +70,7 @@ export default function BroadcastsPage() {
       setTitle('');
       setMessage('');
       setSelectedEmps([]);
+      fetchHistory();
     } catch (err) {
       console.error(err);
       toast.error('Failed to send broadcast');
@@ -168,6 +186,82 @@ export default function BroadcastsPage() {
             </div>
           </div>
         </Card>
+
+        {/* History Section */}
+        <div style={{ marginTop: '24px' }}>
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+              <Clock size={20} color="var(--color-brand)" />
+              <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>Broadcast History</h2>
+            </div>
+            
+            {history.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-text-secondary)' }}>
+                No broadcasts sent yet.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {history.map(item => {
+                  const match = item.title.match(/^\[(broadcast:[^\]]+)\]\s*(.*)$/);
+                  const typeStr = match ? match[1] : '';
+                  const actualTitle = match ? match[2] : item.title;
+                  
+                  let badgeText = "Unknown";
+                  let BadgeIcon = Globe;
+                  
+                  if (typeStr === 'broadcast:all') {
+                    badgeText = "Everyone";
+                    BadgeIcon = Users;
+                  } else if (typeStr.startsWith('broadcast:dept:')) {
+                    badgeText = `Dept: ${typeStr.split(':')[2]}`;
+                    BadgeIcon = LayoutGrid;
+                  } else if (typeStr.startsWith('broadcast:emp:')) {
+                    badgeText = `Specific Employees`;
+                    BadgeIcon = User;
+                  }
+
+                  return (
+                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg)' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, background: 'var(--color-brand-muted)', color: 'var(--color-brand)' }}>
+                            <BadgeIcon size={12} /> {badgeText}
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                            {new Date(item.created_at).toLocaleString()}
+                          </span>
+                        </div>
+                        <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: 600 }}>{actualTitle}</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                          {item.message}
+                        </p>
+                      </div>
+                      
+                      <button 
+                        onClick={async () => {
+                          if (!window.confirm("Are you sure you want to delete this broadcast? It will be removed from all agent apps immediately.")) return;
+                          try {
+                            await supabase.from('notifications').delete().eq('id', item.id);
+                            fetchHistory();
+                            toast.success('Broadcast deleted');
+                          } catch (err) {
+                            toast.error('Failed to delete');
+                          }
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--color-error)', cursor: 'pointer', padding: '8px', opacity: 0.7, transition: 'opacity 0.2s' }}
+                        onMouseOver={e => e.currentTarget.style.opacity = 1}
+                        onMouseOut={e => e.currentTarget.style.opacity = 0.7}
+                        title="Delete Broadcast"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
     </PageContainer>
   );

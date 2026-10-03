@@ -2,7 +2,8 @@ const { invoke } = window.__TAURI__.core;
 
 let supabaseClient = null;
 let currentEmployeeId = null;
-let currentEmployeeName = null;
+let currentEmployeeName = null;\nlet currentEmployeeDept = null;
+let currentEmployeeDept = null;
 let dataPollInterval = null;
 let knownProjectIds = new Set();
 let isTrackingEnabled = true;
@@ -119,7 +120,7 @@ async function handleLogin(e) {
 
     // 5. Show success & fetch HR documents
     sessionStorage.setItem('savedEmployeeId', employeeId);
-    showSuccessScreen(empData?.name || userEmail || employeeId, employeeId);
+    showSuccessScreen(empData?.name || userEmail || employeeId, employeeId, empData?.department || null);
   } catch (err) {
     errorMsg.textContent = err.message || "Invalid credentials.";
     errorMsg.classList.remove("hidden");
@@ -128,7 +129,8 @@ async function handleLogin(e) {
   }
 }
 
-function showSuccessScreen(userLabel, empId) {
+function showSuccessScreen(userLabel, empId, dept) {
+  currentEmployeeDept = dept;
   currentEmployeeId = empId || userLabel;
   currentEmployeeName = userLabel;
   document.getElementById("login-screen").classList.add("hidden");
@@ -322,10 +324,10 @@ async function checkBroadcasts(employeeId) {
           shouldShow = true;
         } else if (typeStr.startsWith('broadcast:dept:')) {
           const dept = typeStr.split(':')[2];
-          if (empData && empData.department === dept) shouldShow = true;
+          if (currentEmployeeDept && currentEmployeeDept === dept) shouldShow = true;
         } else if (typeStr.startsWith('broadcast:emp:')) {
           const empList = typeStr.split(':')[2].split(',').map(e => e.trim().toLowerCase());
-          if (empList.includes(employeeId.toString().toLowerCase())) shouldShow = true;
+          if (currentEmployeeId && empList.includes(currentEmployeeId.toString().toLowerCase())) shouldShow = true;
         }
         
         if (shouldShow) {
@@ -813,9 +815,9 @@ window.addEventListener("DOMContentLoaded", () => {
       await registerDailyCheckIn(saved, false);
       const { data } = await supabaseClient.from('employees').select('name').eq('id', saved).maybeSingle();
       if (data) {
-        showSuccessScreen(data.name, saved);
+        showSuccessScreen(data.name, saved, data.department);
       } else {
-        showSuccessScreen(saved, saved);
+        showSuccessScreen(saved, saved, null);
       }
     }
   });
@@ -998,10 +1000,10 @@ async function fetchAndDisplayAlerts(employeeId) {
         shouldShow = true;
       } else if (typeStr.startsWith('broadcast:dept:')) {
         const dept = typeStr.split(':')[2];
-        if (empData && empData.department === dept) shouldShow = true;
+        if (currentEmployeeDept && currentEmployeeDept === dept) shouldShow = true;
       } else if (typeStr.startsWith('broadcast:emp:')) {
         const empList = typeStr.split(':')[2].split(',').map(e => e.trim().toLowerCase());
-        if (empList.includes(employeeId.toString().toLowerCase())) shouldShow = true;
+        if (currentEmployeeId && empList.includes(currentEmployeeId.toString().toLowerCase())) shouldShow = true;
       }
       
       if (shouldShow) {
