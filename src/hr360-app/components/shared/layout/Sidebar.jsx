@@ -115,7 +115,7 @@ export default function Sidebar({ collapsed, onToggle }) {
           top: 0,
           left: 0,
           height: '100vh',
-          background: '#0F172A', // Sleek dark slate
+          background: '#030712', // Ultra dark premium background
           borderRight: '1px solid rgba(255,255,255,0.05)',
           display: 'flex',
           flexDirection: 'column',
@@ -139,7 +139,7 @@ export default function Sidebar({ collapsed, onToggle }) {
               width: '36px', height: '36px', borderRadius: '10px',
               background: 'linear-gradient(135deg, #3B82F6 0%, #6366F1 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+              boxShadow: '0 0 20px rgba(99, 102, 241, 0.5), 0 4px 12px rgba(99, 102, 241, 0.3)',
               flexShrink: 0
             }}>
               <Activity size={20} color="#fff" />
@@ -232,16 +232,16 @@ function SidebarLink({ item, active, onNavigate, collapsed, badge = 0 }) {
           gap: '12px',
           borderRadius: '10px',
           color: active ? '#FFFFFF' : '#94A3B8',
-          background: active ? 'linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%)' : 'transparent',
-          borderLeft: active ? '3px solid #6366F1' : '3px solid transparent',
+          background: active ? 'linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.05) 100%)' : 'transparent',
+          borderLeft: active ? '4px solid #818CF8' : '4px solid transparent',
           textDecoration: 'none',
           transition: 'all 0.2s',
           overflow: 'hidden'
         }}
         onMouseEnter={(e) => {
           if (!active) {
-            e.currentTarget.style.color = '#FFFFFF';
-            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+            e.currentTarget.style.color = '#F8FAFC';
+            e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
           }
         }}
         onMouseLeave={(e) => {

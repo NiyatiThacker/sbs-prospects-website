@@ -153,8 +153,8 @@ export default function Topbar({ onMenuClick }) {
   return (
     <header style={{
       height: '64px',
-      background: '#22333b',
-      borderBottom: 'none',
+      background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+      borderBottom: '1px solid rgba(0,0,0,0.05)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -172,7 +172,7 @@ export default function Topbar({ onMenuClick }) {
           display: 'none',
           background: 'none',
           border: 'none',
-          color: 'var(--color-text-primary)',
+          color: '#475569',
           cursor: 'pointer',
           padding: '8px',
           borderRadius: 'var(--radius-sm)',
@@ -186,7 +186,7 @@ export default function Topbar({ onMenuClick }) {
       <h1 style={{
         fontSize: '18px',
         fontWeight: 600,
-        color: '#FFFFFF',
+        color: '#0F172A',
         lineHeight: '26px',
         whiteSpace: 'nowrap',
       }}>
@@ -244,7 +244,7 @@ export default function Topbar({ onMenuClick }) {
           onFocus={(e) => {
             e.currentTarget.style.borderColor = 'var(--color-brand)';
             e.currentTarget.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.2)';
-            e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+            e.currentTarget.style.background = '#FFFFFF';
             if (searchValue.trim() && searchResults.length > 0) {
               setShowSuggestions(true);
             }
@@ -339,7 +339,7 @@ export default function Topbar({ onMenuClick }) {
           position: 'relative',
           background: 'none',
           border: 'none',
-          color: 'rgba(255,255,255,0.6)',
+          color: '#475569',
           cursor: 'pointer',
           padding: '8px',
           borderRadius: 'var(--radius-sm)',
