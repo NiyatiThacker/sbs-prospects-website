@@ -1006,10 +1006,10 @@ async function fetchAndDisplayAlerts(employeeId) {
       
       if (shouldShow) {
         html += `
-          <div style="border-left: 4px solid var(--color-primary); background: rgba(0,0,0,0.2); padding: 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 1px 3px rgba(0,0,0,0.2); margin-bottom: 12px;">
-            <div style="font-weight: 600; color: var(--color-text); font-size: 14px;">${actualTitle}</div>
-            <div style="font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; line-height: 1.4;">${b.message}</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">${new Date(b.created_at).toLocaleString()}</div>
+          <div class="notification-card">
+            <div class="notification-title">${actualTitle}</div>
+            <div class="notification-body">${b.message}</div>
+            <div class="notification-time">${new Date(b.created_at).toLocaleString()}</div>
           </div>
         `;
       }
