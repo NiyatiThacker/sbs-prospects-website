@@ -37,7 +37,7 @@ export default function KpiSummaryRow({ kpis }) {
 
   const cards = [
     {
-      title: 'Avg Hours Utilization',
+      title: 'Productivity Ratio',
       value: `${Math.round(kpis.avgUtilization.value)}%`,
       secondaryValue: kpis.avgUtilization.secondary || '7.4h / day',
       ...getTrend(kpis.avgUtilization.value, kpis.avgUtilization.previous),

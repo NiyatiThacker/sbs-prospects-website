@@ -50,7 +50,7 @@ export async function getDashboardKpis() {
       const { data: latestLogs } = await supabase
         .from('screentime_raw_logs')
         .select('employee_id')
-        .gte('timestamp', new Date(Date.now() - 30 * 60000).toISOString());
+        .gte('timestamp', new Date(Date.now() - 5 * 60000).toISOString());
       
       let activeEmployeesSet = new Set(latestLogs?.filter(l => validEmpIds.has(l.employee_id)).map(l => l.employee_id) || []);
       let activeCount = activeEmployeesSet.size;
