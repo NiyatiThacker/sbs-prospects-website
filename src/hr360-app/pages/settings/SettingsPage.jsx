@@ -146,9 +146,16 @@ export default function SettingsPage() {
         });
       }
 
-      // Calculate missing days (out of 7) as absent
+      let workingDaysCount = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(sevenDaysAgo);
+        d.setDate(d.getDate() + i);
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) workingDaysCount++;
+      }
+
       Object.values(summaryMap).sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
-        const missingDays = 7 - s.recordsFound;
+        const missingDays = workingDaysCount - s.recordsFound;
         if (missingDays > 0) {
            s.absent += missingDays;
         }

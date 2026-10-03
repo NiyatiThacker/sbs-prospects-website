@@ -47,6 +47,56 @@ export function generatePDF(data, title) {
   doc.setTextColor(100, 116, 139);
   doc.text(`Generated on: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, 30);
 
+  // Group data by department for chart
+  const deptMap = {};
+  data.forEach(d => {
+    if (!deptMap[d.department]) {
+      deptMap[d.department] = { count: 0, totalScore: 0 };
+    }
+    deptMap[d.department].count++;
+    deptMap[d.department].totalScore += d.score;
+  });
+
+  const depts = Object.keys(deptMap).sort();
+  let startY = 38;
+
+  if (depts.length > 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text("Average Productivity Score by Department", 14, 45);
+    
+    let currentY = 52;
+    const chartX = 45;
+    const maxBarWidth = 120;
+    
+    depts.forEach(dept => {
+      const avgScore = Math.round(deptMap[dept].totalScore / deptMap[dept].count);
+      const barWidth = (avgScore / 100) * maxBarWidth;
+      
+      // Dept label
+      doc.setFontSize(9);
+      doc.setTextColor(71, 85, 105);
+      doc.text(dept, 14, currentY + 4);
+      
+      // Background bar
+      doc.setFillColor(241, 245, 249);
+      doc.rect(chartX, currentY, maxBarWidth, 6, 'F');
+      
+      // Colored bar
+      doc.setFillColor(79, 70, 229);
+      doc.rect(chartX, currentY, barWidth, 6, 'F');
+      
+      // Score text
+      doc.setFontSize(8);
+      doc.setTextColor(30, 41, 59);
+      doc.text(`${avgScore}%`, chartX + barWidth + 3, currentY + 4);
+      
+      currentY += 10;
+    });
+    
+    startY = currentY + 10;
+  }
+
   const tableColumn = ['Employee', 'Department', 'Total Time', 'Productive Time', 'Score', 'Present', 'Absent'];
   const tableRows = [];
 
@@ -66,7 +116,7 @@ export function generatePDF(data, title) {
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
-    startY: 38,
+    startY: startY,
     styles: {
       fontSize: 9,
       cellPadding: 4,
