@@ -53,9 +53,9 @@ export default function BroadcastsPage() {
     let broadcastType = 'broadcast:all';
     
     if (audienceType === 'dept') {
-      broadcastType = `broadcast:dept:\${selectedDept}`;
+      broadcastType = `broadcast:dept:${selectedDept}`;
     } else if (audienceType === 'individual') {
-      broadcastType = `broadcast:emp:\${selectedEmps.join(',')}`;
+      broadcastType = `broadcast:emp:${selectedEmps.join(',')}`;
     }
 
     try {
