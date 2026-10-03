@@ -341,7 +341,7 @@ async function checkBroadcasts(employeeId) {
           console.log("Broadcast received:", actualTitle);
           // Trigger actual OS Notification so it shows up even when minimized
           try {
-            await invoke("show_notification", { title: actualTitle, body: b.message });
+            invoke("show_notification", { title: actualTitle, body: b.message }).catch(e => console.error("Notification invoke failed:", e));
           } catch(e) {
             console.error("Notification trigger failed", e);
           }
