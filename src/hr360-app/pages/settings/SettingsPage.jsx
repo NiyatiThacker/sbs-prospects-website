@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Save, Clock, AppWindow, Bell, Shield, UserMinus, Trash, Database, Download, AlertTriangle } from 'lucide-react';
+import { Save, Clock, AppWindow, Bell, Shield, UserMinus, Trash, Database, Download, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import PageContainer from '@/hr360-app/components/shared/layout/PageContainer';
 import Card from '@/hr360-app/components/shared/ui/Card';
 import Button from '@/hr360-app/components/shared/ui/Button';
 import StatusBadge from '@/hr360-app/components/shared/ui/StatusBadge';
 import { SkeletonCard } from '@/hr360-app/components/shared/ui/Skeleton';
 import { DEPARTMENTS } from '@/hr360-app/utils/constants';
-import { getSettings, updateSettings } from '@/hr360-app/services/settingsService';
+import { getSettings, updateSettings, getDepartmentSettings, updateDepartmentSetting } from '@/hr360-app/services/settingsService';
 import { getAdmins, updateEmployee, deleteEmployee } from '@/hr360-app/services/employeeService';
 import toast from 'react-hot-toast';
 import { supabase } from '@/hr360-app/services/supabaseClient';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState(null);
+  const [departmentSettings, setDepartmentSettings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('hours');
   const [searchCategory, setSearchCategory] = useState('');
@@ -225,6 +226,7 @@ export default function SettingsPage() {
     { id: 'alerts', label: 'Alert Thresholds', icon: <Bell size={18} /> },
     { id: 'admins', label: 'Admin Accounts', icon: <Shield size={18} /> },
     { id: 'data', label: 'Data Management', icon: <Database size={18} /> },
+    { id: 'tracking', label: 'Tracking Config', icon: <Eye size={18} /> },
   ];
 
   return (
@@ -523,6 +525,63 @@ export default function SettingsPage() {
             </Card>
           )}
           
+          
+          {activeSection === 'tracking' && (
+            <Card title="Department Tracking Config">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                  Configure which departments are actively monitored by the Desktop Agent.
+                  If tracking is disabled for a department, the agent will gracefully skip starting the monitoring loop for those employees upon login.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {DEPARTMENTS.map(dept => {
+                    const ds = departmentSettings.find(d => d.department_name === dept);
+                    const isEnabled = ds ? ds.is_tracking_enabled : true;
+
+                    return (
+                      <div key={dept} style={{ 
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '16px', borderRadius: '12px', border: '1px solid var(--color-border)',
+                        background: 'var(--color-surface)'
+                      }}>
+                        <div>
+                          <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)' }}>{dept}</h4>
+                          <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                            {isEnabled ? 'Tracking is currently active for this department.' : 'Tracking is disabled. Employees will not be monitored.'}
+                          </p>
+                        </div>
+                        
+                        <Button 
+                          variant={isEnabled ? 'danger' : 'primary'}
+                          onClick={async () => {
+                            const newStatus = !isEnabled;
+                            const success = await updateDepartmentSetting(dept, newStatus);
+                            if (success) {
+                              setDepartmentSettings(prev => {
+                                const exists = prev.find(p => p.department_name === dept);
+                                if (exists) {
+                                  return prev.map(p => p.department_name === dept ? { ...p, is_tracking_enabled: newStatus } : p);
+                                } else {
+                                  return [...prev, { department_name: dept, is_tracking_enabled: newStatus }];
+                                }
+                              });
+                              toast.success(`Tracking ${newStatus ? 'enabled' : 'disabled'} for ${dept}`);
+                            } else {
+                              toast.error('Failed to update tracking setting');
+                            }
+                          }}
+                        >
+                          {isEnabled ? <><EyeOff size={16} /> Disable Tracking</> : <><Eye size={16} /> Enable Tracking</>}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          )}
+
           {activeSection === 'data' && (
             <Card>
               <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>

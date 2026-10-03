@@ -99,3 +99,35 @@ export async function updateSettings(updates) {
   return settingsState;
 }
 
+export async function getDepartmentSettings() {
+  if (isSupabaseConfigured) {
+    try {
+      const { data, error } = await supabase.from('department_settings').select('*');
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error('[Supabase] Error fetching department settings:', err);
+      return [];
+    }
+  }
+  return [];
+}
+
+export async function updateDepartmentSetting(department_name, is_tracking_enabled) {
+  if (isSupabaseConfigured) {
+    try {
+      const { error } = await supabase
+        .from('department_settings')
+        .update({ is_tracking_enabled })
+        .eq('department_name', department_name);
+      if (error) throw error;
+      return true;
+    } catch (err) {
+      console.error('[Supabase] Error updating department setting:', err);
+      return false;
+    }
+  }
+  return true;
+}
+
+
