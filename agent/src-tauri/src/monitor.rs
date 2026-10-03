@@ -30,6 +30,11 @@ struct AppUsage {
     window_titles: Vec<String>,
 }
 
+#[derive(serde::Deserialize)]
+struct AppClassificationRow {
+    process_name: String,
+}
+
 #[derive(Serialize)]
 struct RawLogPayload<'a> {
     #[serde(rename = "p_employee_id")]
@@ -162,9 +167,29 @@ pub fn start_monitoring(employee_id: String, running_flag: Arc<AtomicBool>) {
         let mut interval = time::interval(Duration::from_secs(5));
         let mut usage_map: HashMap<String, AppUsage> = HashMap::new();
         let mut ticks = 0;
+        let mut whitelist: Vec<String> = Vec::new();
+        let mut whitelist_ticks = 0;
 
         while running_flag.load(Ordering::Relaxed) {
             interval.tick().await;
+
+            // Fetch whitelist every 60s (12 ticks of 5s) or on startup
+            if whitelist_ticks == 0 || whitelist_ticks >= 12 {
+                let wl_url = format!("{}/rest/v1/app_classifications?select=process_name", supabase_url);
+                if let Ok(res) = client.get(&wl_url)
+                    .header("apikey", &supabase_key)
+                    .header("Authorization", format!("Bearer {}", supabase_key))
+                    .send()
+                    .await 
+                {
+                    if let Ok(rows) = res.json::<Vec<AppClassificationRow>>().await {
+                        whitelist = rows.into_iter().map(|r| r.process_name).collect();
+                    }
+                }
+                whitelist_ticks = 1;
+            } else {
+                whitelist_ticks += 1;
+            }
 
             if get_idle_time_seconds() > 300 {
                 let entry = usage_map.entry("Idle".to_string()).or_default();
@@ -188,10 +213,19 @@ pub fn start_monitoring(employee_id: String, running_flag: Arc<AtomicBool>) {
                     
                     let mut payloads = Vec::new();
                     for (app, usage) in &usage_map {
+                        let is_whitelisted = app == "Idle" || whitelist.contains(app);
+                        
+                        let final_app = if is_whitelisted { app.as_str() } else { "Other / Background Apps" };
+                        let final_title = if is_whitelisted { 
+                            usage.window_titles.first().map(|s| s.as_str()).unwrap_or("") 
+                        } else { 
+                            "Unlisted Activity" 
+                        };
+
                         payloads.push(RawLogPayload {
                             employee_id: &employee_id,
-                            process_name: app,
-                            window_title: usage.window_titles.first().map(|s| s.as_str()).unwrap_or(""),
+                            process_name: final_app,
+                            window_title: final_title,
                             duration_seconds: usage.duration_seconds,
                         });
                     }
