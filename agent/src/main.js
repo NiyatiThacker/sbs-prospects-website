@@ -1026,3 +1026,36 @@ async function fetchAndDisplayAlerts(employeeId) {
     console.error("Failed to fetch alerts", err);
   }
 }
+
+
+document.getElementById('manual-checkout-btn')?.addEventListener('click', async () => {
+  if (!currentEmployeeId || !supabaseClient) return;
+  const btn = document.getElementById('manual-checkout-btn');
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+  try {
+    const todayDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const nowUTC = new Date().toISOString().split('.')[0] + 'Z';
+    const { error } = await supabaseClient
+      .from('attendance_records')
+      .update({ check_out: nowUTC })
+      .eq('employee_id', currentEmployeeId)
+      .eq('date', todayDate);
+      
+    if (error) throw error;
+    window.showToast('Checked out successfully!', 'success');
+    setTimeout(async () => {
+      try {
+        const { exit } = window.__TAURI__.process;
+        await exit(0);
+      } catch(e) {
+        window.close();
+      }
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    window.showToast('Failed to check out.', 'error');
+    btn.disabled = false;
+    btn.textContent = "Check Out";
+  }
+});
