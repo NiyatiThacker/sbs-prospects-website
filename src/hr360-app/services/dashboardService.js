@@ -56,9 +56,11 @@ export async function getDashboardKpis() {
       let activeCount = activeEmployeesSet.size;
 
       // 2. Attendance Rate
+      const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: COMPANY_TIMEZONE });
       let { data: todayAttendance } = await supabase
         .from('attendance_records')
         .select('employee_id, status, date')
+        .eq('date', todayStr)
         .order('date', { ascending: false })
         .limit(100);
         
